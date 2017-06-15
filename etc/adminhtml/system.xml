@@ -14,7 +14,7 @@
             <group id="twispay" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Twispay</label>
                 <comment>
-                    <![CDATA[<a href="https://twispay.com/" target="_blank">Click here to setup your merchan account</a>]]>
+                    <![CDATA[<a href="https://twispay.com/" target="_blank">Click here to setup your merchant account</a>]]>
                 </comment>
                 <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Enabled</label>

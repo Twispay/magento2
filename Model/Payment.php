@@ -6,8 +6,7 @@
  * @package     Twispay_Payments
  * @author      Webliant Software
  */
-
-namespace Twisplay\Payments\Model;
+namespace Twispay\Payments\Model;
 
 class Payment extends \Magento\Payment\Model\Method\Cc
 {

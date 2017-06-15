@@ -1,18 +1,18 @@
 <?xml version="1.0"?>
 <!--
 /**
-* Twispay_Payments default configuration
-*
-* @category    Twispay
-* @package     Twispay_Payments
-* @author      Webliant Software
-*/
+ * Twispay_Payments default configuration
+ *
+ * @category    Twispay
+ * @package     Twispay_Payments
+ * @author      Webliant Software
+ */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
     <default>
         <payment>
-            <inchoo_stripe>
-                <active>0</active>
+            <twispay>
+                <active>1</active>
                 <model>Twispay\Payments\Model\Payment</model>
                 <payment_action>authorize_capture</payment_action>
                 <title>Twispay</title>
@@ -20,7 +20,7 @@
                 <cctypes>VI,MC</cctypes>
                 <allowspecific>0</allowspecific>
                 <min_order_total>0.50</min_order_total>
-            </inchoo_stripe>
+            </twispay>
         </payment>
     </default>
 </config>
