@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Twispay_Payments admin configuration
+ *
+ * @category    Twispay
+ * @package     Twispay_Payments
+ * @author      Webliant Software
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../Config/etc/system_file.xsd">
+    <system>
+        <section id="payment">
+            <group id="twispay" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Twispay</label>
+                <comment>
+                    <![CDATA[<a href="https://twispay.com/" target="_blank">Click here to setup your merchant account</a>]]>
+                </comment>
+                <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Enabled</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Title</label>
+                </field>
+                <field id="api_key" translate="label" type="obscure" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Api Key</label>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                </field>
+				<field id="test_key" translate="label" type="obscure" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Test Key</label>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                </field>
+                <field id="debug" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Debug</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="site_id" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Site Id</label>
+                </field>
+				<field id="email_invoice" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>E-mail invoice to customer</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="success_page" translate="label" type="text" sortOrder="99" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Succes page key</label>
+                    <comment>Create a new page to be used for displaying a succesful transaction and paste the URL key here</comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

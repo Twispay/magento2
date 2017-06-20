@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Twispay_Payments default configuration
+ *
+ * @category    Twispay
+ * @package     Twispay_Payments
+ * @author      Webliant Software
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Store/etc/config.xsd">
+    <default>
+        <payment>
+                <twispay>
+                <active>1</active>
+                <title>Twispay</title>
+                <order_status>pending_payment</order_status>
+                <instructions>Instruction.</instructions>
+                <payment_action>true</payment_action>
+                <model>Twispay\Payments\Model\Twispay</model>
+                <group>offline</group>
+            </twispay>
+        </payment>
+    </default>
+</config>

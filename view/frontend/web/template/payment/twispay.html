@@ -1,0 +1,53 @@
+<!--
+/**
+ * Twispay payment method model
+ *
+ * @category    Twispay
+ * @package     Twispay_Payments
+ * @author      Webliant Software
+ */
+-->
+<div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}">
+    <div class="payment-method-title field choice">
+        <input type="radio"
+               name="payment[method]"
+               class="radio"
+               data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()"/>
+        <label data-bind="attr: {'for': getCode()}" class="label"><span data-bind="text: getTitle()"></span></label>
+    </div>
+    <div class="payment-method-content">
+        <!-- ko foreach: getRegion('messages') -->
+        <!-- ko template: getTemplate() --><!-- /ko -->
+        <!--/ko-->
+        <div class="payment-method-billing-address">
+            <!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
+            <!-- ko template: getTemplate() --><!-- /ko -->
+            <!--/ko-->
+        </div>
+        <div class="checkout-agreements-block">
+            <!-- ko foreach: $parent.getRegion('before-place-order') -->
+                <!-- ko template: getTemplate() --><!-- /ko -->
+            <!--/ko-->
+        </div>
+        <div class="actions-toolbar">
+            <div class="primary">			
+				<form accept-charset="UTF-8"  action="https://secure-stage.twispay.com" method="post">
+					<input name="siteId" type="hidden" value="121" />
+					<input name="identifier" type="hidden" value="_3" />
+					<input name="amount" type="hidden" value="300" />
+					<input name="currency" type="hidden" value="USD" />
+					<input name="description" type="hidden" value="Subscription" />
+					<input name="orderType" type="hidden" value="purchase" />
+					<input name="orderId" type="hidden" value="89" />
+					<input name="backUrl" type="hidden" value="http://localhost/twispay/checkout/onepage/success/"/>
+					<input name="checksum" type="hidden" value="5UR5sUYGYjg9b+AqWjKc6VFNiqpfqd3LUsUCM7/eJU6WKHxlSdEem2ImhDtUH54KgQ9m1v+QRhSiucakWyX93w==" />							
+					<button class="action primary checkout"
+							type="submit">
+						<span data-bind="i18n: 'Pay with Twispay'"></span>
+					</button>
+				</form>
+            </div>
+        </div>
+    </div>
+</div>
+        

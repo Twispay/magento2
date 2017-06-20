@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Twispay_Payments module dependency
+ *
+ * @category    Twispay
+ * @package     Twispay_Payments
+ * @author      Webliant Software
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../lib/internal/Magento/Framework/Module/etc/module.xsd">
+  <module name="Twispay_Payments" setup_version="2.1.0">
+  </module>
+</config>
