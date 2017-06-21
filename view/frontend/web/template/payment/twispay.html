@@ -31,8 +31,8 @@
         </div>
         <div class="actions-toolbar">
             <div class="primary">			
-				<form accept-charset="UTF-8" method="post" data-bind="action: $data.twispay_endpoint">
-					<input name="siteId" type="hidden" data-bind="value: $data.site_id" />
+				<form accept-charset="UTF-8" action="https://secure-stage.twispay.com" method="post">
+					<input name="siteId" type="text" data-bind="value: $data.site_id" />
 					<input name="identifier" type="hidden" value="_3" />
 					<input name="amount" type="hidden" value="300" />
 					<input name="currency" type="hidden" value="USD" />
