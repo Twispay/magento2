@@ -32,8 +32,10 @@ define(
 			getData: function() {
 				return {
 					"method": "twispay",
-					"twispay_endpoint" : "https://secure-stage.twispay.com",
-					"site_id": wpConfig.site_id
+					"additional_data" : {
+						"twispay_endpoint" : "https://secure-stage.twispay.com",
+						"site_id": wpConfig.site_id
+					}
 				};
 			}
 		});
