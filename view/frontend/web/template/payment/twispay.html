@@ -34,12 +34,12 @@
 				<form accept-charset="UTF-8" action="https://secure-stage.twispay.com" method="post">
 					<input name="siteId" type="text" data-bind="value: site_id" />
 					<input name="identifier" type="text" value="_3" />
-					<input name="amount" type="text" value="300" />
-					<input name="currency" type="text" value="USD" />
+					<input name="amount" type="text" data-bind="value: amount" />
+					<input name="currency" type="text" data-bind="value: currency" />
 					<input name="description" type="text" value="Subscription" />
 					<input name="orderType" type="text" value="purchase" />
 					<input name="orderId" type="text" value="89" />
-					<input name="backUrl" type="text" value="http://localhost/twispay/checkout/onepage/success/"/>
+					<input name="backUrl" type="text" data-bind="value: getBackUrl()"/>
 					<input name="checksum" type="text" value="5UR5sUYGYjg9b+AqWjKc6VFNiqpfqd3LUsUCM7/eJU6WKHxlSdEem2ImhDtUH54KgQ9m1v+QRhSiucakWyX93w==" />							
 					<button class="action primary checkout" type="submit" data-bind="click: redirectToTwispay">
 						<span data-bind="i18n: 'Continue to Twispay'"></span>
