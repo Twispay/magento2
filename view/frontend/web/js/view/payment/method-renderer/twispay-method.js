@@ -15,14 +15,14 @@ define(
 	function (Component, checkoutData, quote) {
 		'use strict';
 		var wpConfig = window.checkoutConfig.payment.twispay;
+		var billingAddress = quote.billingAddress();
+
 		return Component.extend({
 			defaults: {
-				template: 'Twispay_Payments/payment/twispay'
-			},
-
-			/** Returns send check to info */
-			getMailingAddress: function() {
-				return window.checkoutConfig.payment.checkmo.mailingAddress;
+				template: 'Twispay_Payments/payment/twispay',
+				firstname: billingAddress.firstname,
+				lastname: billingAddress.lastname,
+				site_id: wpConfig.site_id
 			},
 
 			redirectToTwispay: function() {
@@ -32,10 +32,7 @@ define(
 			getData: function() {
 				return {
 					"method": "twispay",
-					"additional_data" : {
-						"twispay_endpoint" : "https://secure-stage.twispay.com",
-						"site_id": wpConfig.site_id
-					}
+					"twispay_endpoint" : "https://secure-stage.twispay.com"
 				};
 			}
 		});
