@@ -16,16 +16,19 @@ define(
 		'use strict';
 		var wpConfig = window.checkoutConfig.payment.twispay;
 
-console.log(checkoutData);
-console.log(quote);
+window.checkoutData = checkoutData;
+window.quote = quote;
 
 		var billingAddress = quote.billingAddress();
+//		var totals = quote.totals();
 
 		return Component.extend({
 			defaults: {
 				template: 'Twispay_Payments/payment/twispay',
 				firstname: billingAddress.firstname,
 				lastname: billingAddress.lastname,
+				country: billingAddress.country,
+				city: billingAddress.city,
 				site_id: wpConfig.site_id
 			},
 
