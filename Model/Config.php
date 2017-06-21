@@ -31,7 +31,7 @@ class Config
         return !!$this->_scopeConfigInterface->getValue('payment/twispay/debug');
     }
 
-    public function getBackUrl() {
+    public function getRedirectUrl() {
         return $this->_scopeConfigInterface->getValue('payment/twispay/success_page');
     }
 
