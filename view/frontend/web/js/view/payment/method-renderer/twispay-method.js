@@ -26,14 +26,13 @@ define(
 			},
 
 			redirectToTwispay: function() {
-				alert("Posting to twispay");
-console.log(wpConfig);
-				return false;
+				return true;
 			},
 
 			getData: function() {
 				return {
 					"method": "twispay",
+					"twispay_endpoint" : "https://secure-stage.twispay.com",
 					"site_id": wpConfig.site_id
 				};
 			}
