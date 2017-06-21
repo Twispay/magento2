@@ -10,11 +10,15 @@ define(
 	[
 		'Magento_Checkout/js/view/payment/default',
 		'Magento_Checkout/js/checkout-data',
-		'Magento_Checkout/js/model/quote',
+		'Magento_Checkout/js/model/quote'
 	],
 	function (Component, checkoutData, quote) {
 		'use strict';
 		var wpConfig = window.checkoutConfig.payment.twispay;
+
+console.log(checkoutData);
+console.log(quote);
+
 		var billingAddress = quote.billingAddress();
 
 		return Component.extend({
