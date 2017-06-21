@@ -11,10 +11,9 @@ define(
 		'Magento_Checkout/js/view/payment/default',
 		'Magento_Checkout/js/checkout-data',
 		'Magento_Checkout/js/model/quote',
-		'Magento_Customer/js/customer-data',
-		'mage/url'
+		'Magento_Customer/js/customer-data'
 	],
-	function (Component, checkoutData, quote, customerData, url) {
+	function (Component, checkoutData, quote, customerData) {
 		'use strict';
 		var wpConfig = window.checkoutConfig.payment.twispay;
 
@@ -24,7 +23,7 @@ window.customerData = customerData;
 
 		var billingAddress = quote.billingAddress();
 		var totals = quote.totals();
-		var customer = customerData.get('customer');
+//		var customer = customerData.get('customer');
 
 		return Component.extend({
 			defaults: {
@@ -43,7 +42,7 @@ window.customerData = customerData;
 			},
 
 			getBackUrl: function() {
-				return url.build(wpConfig.back_url);
+				return "hello world";//url.build(wpConfig.back_url);
 			},
 
 			getData: function() {
