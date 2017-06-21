@@ -33,7 +33,7 @@ window.customerData = customerData;
 				country: billingAddress.country,
 				city: billingAddress.city,
 				amount: totals.grand_total,
-				currency: total.quote_currency_code,
+				currency: totals.quote_currency_code,
 				site_id: wpConfig.site_id
 			},
 
