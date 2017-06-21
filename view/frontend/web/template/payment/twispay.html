@@ -31,8 +31,8 @@
         </div>
         <div class="actions-toolbar">
             <div class="primary">			
-				<form accept-charset="UTF-8"  action="https://secure-stage.twispay.com" method="post">
-					<input name="siteId" type="hidden" value="121" />
+				<form accept-charset="UTF-8" action="https://secure-stage.twispay.com" method="post">
+					<input name="siteId" type="hidden" data-bind="value: $data.site_id" />
 					<input name="identifier" type="hidden" value="_3" />
 					<input name="amount" type="hidden" value="300" />
 					<input name="currency" type="hidden" value="USD" />
@@ -41,9 +41,8 @@
 					<input name="orderId" type="hidden" value="89" />
 					<input name="backUrl" type="hidden" value="http://localhost/twispay/checkout/onepage/success/"/>
 					<input name="checksum" type="hidden" value="5UR5sUYGYjg9b+AqWjKc6VFNiqpfqd3LUsUCM7/eJU6WKHxlSdEem2ImhDtUH54KgQ9m1v+QRhSiucakWyX93w==" />							
-					<button class="action primary checkout"
-							type="submit">
-						<span data-bind="i18n: 'Pay with Twispay'"></span>
+					<button class="action primary checkout" type="submit" data-bind="click: redirectToTwispay">
+						<span data-bind="i18n: 'Continue to Twispay'"></span>
 					</button>
 				</form>
             </div>

@@ -5,7 +5,6 @@
  * @package     Twispay_Payments
  * @author      Webliant Software
  */
- 
 define(
     [
         'uiComponent',
