@@ -3,36 +3,56 @@ namespace Twispay\Payments\Model;
 
 class Config
 {
-    /**
-     * @var \Magento\Framework\App\Config\ScopeConfigInterface
-     */
-    protected $_scopeConfigInterface;
+	/**
+	 * @var \Magento\Framework\App\Config\ScopeConfigInterface
+	 */
+	protected $_scopeConfigInterface;
 
-    public function __construct(
-        \Magento\Framework\App\Config\ScopeConfigInterface $configInterface)
-    {
-        $this->_scopeConfigInterface = $configInterface;
-    }
+	public function __construct(
+		\Magento\Framework\App\Config\ScopeConfigInterface $configInterface)
+	{
+		$this->_scopeConfigInterface = $configInterface;
+	}
 
-    public function getApiKey()
-    {
-        if ($this->isDebugMode()) {
-            return $this->_scopeConfigInterface->getValue('payment/twispay/live_api_key');
-        } else {
-            return $this->_scopeConfigInterface->getValue('payment/twispay/test_api_key');
-        }
-    }
+	public function getApiKey()
+	{
+		if ($this->isDebugMode()) {
+			return $this->getConfigValue('test_api_key');
+		} else {
+			return $this->getConfigValue('live_api_key');
+		}
+	}
 
-    public function getSiteId() {
-        return $this->_scopeConfigInterface->getValue('payment/twispay/site_id');
-    }
+	public function getSiteId() {
+		return $this->getConfigValue('site_id');
+	}
 
-    public function isDebugMode() {
-        return !!$this->_scopeConfigInterface->getValue('payment/twispay/debug');
-    }
+	public function isDebugMode() {
+		return !!$this->getConfigValue('debug');
+	}
 
-    public function getRedirectUrl() {
-        return $this->_scopeConfigInterface->getValue('payment/twispay/success_page');
-    }
+	public function getRedirectUrl() {
+		if ($this->isDebugMode()) {
+			return $this->getConfigValue('test_redirect_url');
+		} else {
+			return $this->getConfigValue('live_redirect_url');
+		}
+	}
+
+	public function getBackUrl() {
+		return $this->getConfigValue('success_page');
+	}
+
+	public function getOrderType() {
+		return $this->getConfigValue('order_type');
+	}
+
+	public function getCardTransactionMode() {
+		return $this->getConfigValue('card_transaction_mode');
+	}
+
+	private function getConfigValue($value) {
+		return $this->_scopeConfigInterface->getValue('payment/twispay/' . $value);
+	}
 
 }
