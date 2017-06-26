@@ -40,6 +40,10 @@ class Config
 	}
 
 	public function getBackUrl() {
+		return $this->getConfigValue('back_url');
+	}
+
+	public function getSuccessPage() {
 		return $this->getConfigValue('success_page');
 	}
 

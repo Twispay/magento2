@@ -12,11 +12,7 @@ use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Customer\Model\Session;
 
-/**
- * This controller handles the back payment URL
- * @package Twispay\Payments\Controller\Checkout
- */
-class PlaceOrder extends Action
+class BackPayment extends Action
 {
 	/**
 	 * @var CartManagementInterface
@@ -54,13 +50,20 @@ class PlaceOrder extends Action
 	protected $_orderFactory;
 
 	/**
-	 * @var JsonFactory
+	 * @var \Twispay\Payments\Model\Config
 	 */
-	protected $resultJsonFactory;
+	private $config;
+
+	/**
+	 * @var \Twispay\Payments\Logger\Logger
+	 */
+	private $log;
 
 	/**
 	 * Constructor
 	 * @param \Magento\Framework\App\Action\Context $context
+	 * @param \Twispay\Payments\Logger\Logger $twispayLogger
+	 * @param \Twispay\Payments\Model\Config $config
 	 * @param CartManagementInterface $quoteManagement
 	 * @param QuoteIdMaskFactory $quoteIdMaskFactory
 	 * @param CartRepositoryInterface $cartRepository
@@ -72,16 +75,19 @@ class PlaceOrder extends Action
 	 */
 	public function __construct(
 		\Magento\Framework\App\Action\Context $context,
+		\Twispay\Payments\Logger\Logger $twispayLogger,
+		\Twispay\Payments\Model\Config $config,
 		CartManagementInterface $quoteManagement,
 		QuoteIdMaskFactory $quoteIdMaskFactory,
 		CartRepositoryInterface $cartRepository,
 		\Magento\Customer\Model\Session $customerSession,
 		\Magento\Checkout\Model\Session $checkoutSession,
 		ServiceInputProcessor $inputProcessor,
-		OrderFactory $orderFactory,
-		JsonFactory $resultJsonFactory
+		OrderFactory $orderFactory
 	)
 	{
+		$this->log = $twispayLogger;
+		$this->config = $config;
 		$this->quoteManagement = $quoteManagement;
 		$this->quoteIdMaskFactory = $quoteIdMaskFactory;
 		$this->cartRepository = $cartRepository;
@@ -89,7 +95,6 @@ class PlaceOrder extends Action
 		$this->_checkoutSession = $checkoutSession;
 		$this->inputProcessor = $inputProcessor;
 		$this->_orderFactory = $orderFactory;
-		$this->resultJsonFactory = $resultJsonFactory;
 
 		parent::__construct($context);
 	}
@@ -102,10 +107,11 @@ class PlaceOrder extends Action
 	public function execute()
 	{
 
-		$result = $this->resultJsonFactory->create();
-		
-        return $result->setData([
-            'success' => true
-        ]);
+		$response = $this->getRequest()->getParams();
+		$this->log->debug(print_r($response, true));
+
+		$successPage = $this->config->getSuccessPage();
+
+		$this->_redirect($successPage);
 	}
 }

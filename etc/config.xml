@@ -22,6 +22,7 @@
                 <test_api_key backend_model="Magento\Config\Model\Config\Backend\Encrypted" />
                 <live_redirect_url>https://secure.twispay.com</live_redirect_url>
                 <test_redirect_url>https://secure-stage.twispay.com</test_redirect_url>
+                <back_url>/twispay/checkout/backpayment</back_url>
                 <model>Twispay\Payments\Model\Twispay</model>
                 <group>offline</group>
             </twispay>
