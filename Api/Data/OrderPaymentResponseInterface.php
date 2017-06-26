@@ -121,6 +121,13 @@ interface OrderPaymentResponseInterface
 	public function getOrderId();
 
 	/**
+	 * Gets an indexed array of string values associated with the order
+	 *
+	 * @return array|null
+	 */
+	public function getOrderTags();
+
+	/**
 	 * Gets the indexed array of string values – contains name of the products.
 	 *
 	 * @return array|null
@@ -128,11 +135,62 @@ interface OrderPaymentResponseInterface
 	public function getItem();
 
 	/**
+	 * Returns an indexed array of float values corresponding to the price of each
+	 * item in the order
+	 *
+	 * @return array|null
+	 */
+	public function getUnitPrice();
+
+	/**
+	 * Returns an indexed array of integer values representing the number of unit of each
+	 * item in the order
+	 *
+	 * @return array|null
+	 */
+	public function getUnits();
+
+	/**
+	 * Returns an indexed array of float values representing the total price of each unit type
+	 *
+	 * @return array|null
+	 */
+	public function getSubTotal();
+
+	/**
 	 * The type of transaction to perform: AUTH or AUTH+Capture
 	 *
-	 * @return mixed
+	 * @return string
 	 */
 	public function getCardTransactionMode();
+
+	/**
+	 * The URL to return to after a successful or failed transaction
+	 *
+	 * @return string|null
+	 */
+	public function getBackUrl();
+
+	/**
+	 * A preferred card ID
+	 *
+	 * @return string|null
+	 */
+	public function getCardId();
+
+	/**
+	 * Indexed array of tags associated with the customer
+	 *
+	 * @return array|null
+	 */
+	public function getCustomerTags();
+
+	/**
+	 * Returns an alternative email address to send invoice to
+	 *
+	 * @return string|null
+	 */
+	public function getInvoiceEmail();
 
 	/**
 	 * Verification hash for the payment details

@@ -46,12 +46,18 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 	private $helper;
 
 	/**
+	 * @var \Twispay\Payments\Logger\Logger
+	 */
+	private $log;
+
+	/**
 	 * Constructor
 	 *
 	 * @param \Twispay\Payments\Model\Config $config
 	 * @param \Twispay\Payments\Helper\Payment $helper
 	 * @param \Magento\Customer\Model\Session $customerSession
 	 * @param \Magento\Checkout\Helper\Data $checkoutHelper
+	 * @param \Twispay\Payments\Logger\Logger $twispayLogger
 	 * @param \Twispay\Payments\Service\V1\Data\OrderPaymentResponseFactory $responseFactory
 	 */
 	public function __construct(
@@ -59,6 +65,7 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 		\Twispay\Payments\Helper\Payment $helper,
 		\Magento\Customer\Model\Session $customerSession,
 		\Magento\Checkout\Helper\Data $checkoutHelper,
+		\Twispay\Payments\Logger\Logger $twispayLogger,
 		\Twispay\Payments\Service\V1\Data\OrderPaymentResponseFactory $responseFactory
 	) {
 		$this->config = $config;
@@ -66,7 +73,7 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 		$this->checkoutHelper = $checkoutHelper;
 		$this->checkoutSession = $this->checkoutHelper->getCheckout();
 		$this->customerSession = $customerSession;
-
+		$this->log = $twispayLogger;
 		$this->responseFactory = $responseFactory;
 	}
 
@@ -79,30 +86,48 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 	{
 		// Get the details of the last order
 		$order = $this->checkoutSession->getLastRealOrder();
-		$quote = $this->checkoutSession->getQuote();
 
-		$address = $quote->getBillingAddress();
+		$address = $order->getBillingAddress();
 
 		$items = array();
+		$units = array();
+		$unitPrice = array();
+		$subTotal = array();
 		foreach ($order->getAllItems() as $key => $item) {
 			$items[$key] = $item->getName();
+			$subTotal[$key] = strval(number_format((float)$item->getBaseRowTotal(), 2, '.', ''));
+			$unitPrice[$key] = strval(number_format((float)$item->getPrice(), 2, '.', ''));
+			$units[$key] = (int)$item->getQtyOrdered();
 		}
 
+		$emptyStringArray = array();
+		$emptyStringArray[0] = "";
+
 		$data = [
-			'siteId' => $this->config->getSiteId(),
-			'orderId' => $order->getRealOrderId(),
+			'siteId' => strval($this->config->getSiteId()),
+			'orderId' => strval((int)$order->getRealOrderId()),
 			'currency' => $order->getOrderCurrencyCode(),
-			'amount' => number_format((float)$order->getGrandTotal(), 2, '.', ''),
+			'amount' => strval(number_format((float)$order->getGrandTotal(), 2, '.', '')),
 			'orderType' => $this->config->getOrderType(),
 			'cardTransactionMode' => $this->config->getCardTransactionMode(),
-			'firstName' => $address->getFirstname(),
-			'lastName' => $address->getLastname(),
-			'city' => $address->getCity(),
-			'state' => $address->getRegion(),
-			'country' => $address->getCountry(),
-			'zipCode' => $address->getPostcode(),
-			'address' => $address->getStreetFull(),
+			'firstName' => $address->getFirstname() != null ? $address->getFirstname() : "",
+			'lastName' => $address->getLastname() != null ? $address->getLastname() : "",
+			'city' => $address->getCity() != null ? $address->getCity() : "",
+			'state' => $address->getRegion() != null ? $address->getRegion() : "",
+			'country' => $address->getCountryId() != null ? $address->getCountryId() : "",
+			'zipCode' => $address->getPostcode() != null ? $address->getPostcode() : "",
+			'address' => $address->getStreetFull() != null ? $address->getStreetFull() : "",
+			'email' => $address->getEmail() != null ? $address->getEmail() : "",
+			'phone' => $address->getTelephone() != null ? $address->getTelephone() : "",
 			'item' => $items,
+			'backUrl' => "",
+			'cardId' => "",
+			'customerTags' => $emptyStringArray,
+			'invoiceEmail' => "",
+			'unitPrice' => $unitPrice,
+			'units' => $units,
+			'subTotal' => $subTotal,
+			'orderTags' => $emptyStringArray,
 			'identifier' => '_' . $this->customerSession->getCustomerId()
 		];
 

@@ -149,8 +149,40 @@ class OrderPaymentResponse extends \Magento\Framework\Api\AbstractExtensibleObje
 	/**
 	 * @return array
 	 */
+	public function getOrderTags()
+	{
+		return $this->_get('orderTags');
+	}
+
+	/**
+	 * @return array
+	 */
 	public function getItem() {
 		return $this->_get('item');
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getUnitPrice()
+	{
+		return $this->_get('unitPrice');
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getUnits()
+	{
+		return $this->_get('units');
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getSubTotal()
+	{
+		return $this->_get('subTotal');
 	}
 
 	/**
@@ -161,6 +193,37 @@ class OrderPaymentResponse extends \Magento\Framework\Api\AbstractExtensibleObje
 		return $this->_get('cardTransactionMode');
 	}
 
+	/**
+	 * @return string
+	 */
+	public function getBackUrl()
+	{
+		return $this->_get('backUrl');
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getCardId()
+	{
+		return $this->_get('cardId');
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getCustomerTags()
+	{
+		return $this->_get('customerTags');
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getInvoiceEmail()
+	{
+		return $this->_get('invoiceEmail');
+	}
 
 	/**
 	 * @return string
