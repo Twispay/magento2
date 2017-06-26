@@ -129,7 +129,13 @@ class Notification extends Action
 			try {
 				$result = $this->helper->decryptResponse($response['opensslResult']);
 
-				$this->log->debug(print_r($result, true));
+				if ($result != null) {
+					$result = json_decode($result);
+
+					$this->log->debug(print_r($result, true));
+				} else {
+					$this->log->error("Decoded response is NULL");
+				}
 			} catch (LocalizedException $ex) {
 				$this->log->error($ex->getMessage(), $ex);
 			}

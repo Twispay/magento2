@@ -131,18 +131,25 @@ class BackPayment extends Action
 			try {
 				$result = $this->helper->decryptResponse($response['opensslResult']);
 
-				$this->log->debug(print_r($result, true));
+				if ($result != null) {
+					$result = json_decode($result);
+
+					$this->log->debug(print_r($result, true));
+				} else {
+					$this->log->error("Decoded response is NULL");
+				}
+
 			} catch (LocalizedException $ex) {
 				$this->log->error($ex->getMessage(), $ex);
 			}
 		}
 
-		if ($result && ($result['status'] == 'complete-ok' || $result['status'] == 'in-progress')) {
+		if ($result && isset($result->status) && ($result->status == 'complete-ok' || $result->status == 'in-progress')) {
 
-			$this->messageManager->addSuccessMessage(__('Payment has been successfully authorized. Transaction id: %s'), $result['transactionId']);
+			$this->messageManager->addSuccessMessage(__('Payment has been successfully authorized. Transaction id: %s'), $result->transactionId);
 
 			$successPage = $this->config->getSuccessPage();
-			$this->log->debug("Redirecting:" + $successPage);
+			$this->log->debug("Redirecting:" . $successPage);
 			$this->_redirect($successPage);
 		} else {
 			$this->messageManager->addErrorMessage(__('Failed to complete payment.'));
