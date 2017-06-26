@@ -4,6 +4,7 @@ namespace Twispay\Payments\Service\V1;
 
 
 use Twispay\Payments\Api\TwispayPaymentDetailsInterface;
+use \Magento\Sales\Model\Order;
 
 /**
  * Class TwispayPaymentDetails
@@ -87,6 +88,10 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 		// Get the details of the last order
 		$order = $this->checkoutSession->getLastRealOrder();
 
+		// Set the status of this order to pending payment
+		$order->setState(Order::STATE_PENDING_PAYMENT);
+		$order->save();
+
 		$address = $order->getBillingAddress();
 
 		$items = array();
@@ -98,6 +103,15 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 			$subTotal[$key] = strval(number_format((float)$item->getRowTotalInclTax(), 2, '.', ''));
 			$unitPrice[$key] = strval(number_format((float)$item->getPriceInclTax(), 2, '.', ''));
 			$units[$key] = (int)$item->getQtyOrdered();
+		}
+
+		// Add the shipping price
+		if ($order->getShippingAmount() > 0) {
+			$index             = count($items);
+			$items[$index]     = __('Shipping') . ' (' . $order->getShippingDescription() . ')';
+			$unitPrice[$index] = strval(number_format((float) $order->getShippingAmount(), 2, '.', ''));;
+			$units[$index]     = "";
+			$subTotal[$index]  = strval(number_format((float) $order->getShippingAmount(), 2, '.', ''));
 		}
 
 		$emptyStringArray = array();
@@ -120,7 +134,7 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 			'email' => $address->getEmail() != null ? $address->getEmail() : "",
 			'phone' => $address->getTelephone() != null ? $address->getTelephone() : "",
 			'item' => $items,
-			'backUrl' => "",
+			'backUrl' => $this->helper->getBackUrl(),
 			'cardId' => "",
 			'customerTags' => $emptyStringArray,
 			'invoiceEmail' => "",

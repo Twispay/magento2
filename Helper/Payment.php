@@ -39,6 +39,15 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
 		$this->storeManager = $storeManager;
 	}
 
+	public function getBackUrl() {
+		$backUrl = $this->config->getBackUrl();
+		if (isset($backUrl) && trim($backUrl)!=='') {
+			return $this->storeManager->getStore()->getBaseUrl() . $this->config->getBackUrl();
+		}
+
+		return "";
+	}
+
 	/**
 	 * This method computes the checksum on the given data array
 	 *
