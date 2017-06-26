@@ -87,7 +87,9 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 		$order = $this->checkoutSession->getLastRealOrder();
 
 		// Set the status of this order to pending payment
-		$order->setState(Order::STATE_PENDING_PAYMENT);
+		$order->setState(Order::STATE_PENDING_PAYMENT, true);
+		$order->setStatus(Order::STATE_PENDING_PAYMENT);
+		$order->addStatusToHistory($order->getStatus(), 'Redirecting to Twispay payment gateway');
 		$order->save();
 
 		$address = $order->getBillingAddress();

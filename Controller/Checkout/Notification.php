@@ -11,6 +11,7 @@ use Magento\Sales\Model\OrderFactory;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Customer\Model\Session;
+use \Magento\Sales\Model\Order;
 
 /**
  * This controller handles the server to server notification
@@ -142,6 +143,16 @@ class Notification extends Action
 		}
 
 		if ($result && ($result['status'] == 'complete-ok' || $result['status'] == 'in-progress')) {
+
+			// Set the status of this order to processing
+			$orderId = $result->externalOrderId;
+			$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+			$order = $objectManager->create('\Magento\Sales\Model\Order') ->load($orderId);
+			$order->setState(Order::STATE_PROCESSING, true);
+			$order->setStatus(Order::STATE_PROCESSING);
+			$order->addStatusToHistory($order->getStatus(), 'Order paid successfuly with reference ' . $result->transactionId);
+			$order->save();
+
 			$oResponse->setContents('OK');
 		} else {
 			$oResponse->setContents('ERROR');
