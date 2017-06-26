@@ -20,6 +20,11 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
 	protected $log;
 
 	/**
+	 * @var \Twispay\Payments\Model\Config
+	 */
+	private $config;
+
+	/**
 	 * Constructor
 	 *
 	 * @param \Magento\Framework\App\Helper\Context $context
@@ -63,15 +68,21 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
 		// Sort the keys in the object alphabetically
 		$this->recursiveKeySort($data);
 
-		$this->log->debug(json_encode($data));
+		$this->log->debug(var_export($data, true));
 
 		// Build an encoded HTTP query string from the data
 		$query = http_build_query($data);
 
+		$this->log->debug($query);
+
 		// Encrypt the query string with SHA-512 algorithm
 		$encoded = hash_hmac('sha512', $query, $apiKey, true);
 
-		return base64_encode($encoded);
+		$checksum = base64_encode($encoded);
+
+		$this->log->debug($checksum);
+
+		return $checksum;
 	}
 
 	/**

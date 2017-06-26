@@ -19,7 +19,7 @@ use Twispay\Payments\Api\Data\OrderPaymentResponseInterface;
 class OrderPaymentResponse extends \Magento\Framework\Api\AbstractExtensibleObject implements OrderPaymentResponseInterface
 {
 	/**
-	 * @return int
+	 * @return string
 	 */
 	public function getSiteId()
 	{
@@ -107,7 +107,7 @@ class OrderPaymentResponse extends \Magento\Framework\Api\AbstractExtensibleObje
 	}
 
 	/**
-	 * @return float
+	 * @return string
 	 */
 	public function getAmount()
 	{
@@ -139,19 +139,11 @@ class OrderPaymentResponse extends \Magento\Framework\Api\AbstractExtensibleObje
 	}
 
 	/**
-	 * @return int
+	 * @return string
 	 */
 	public function getOrderId()
 	{
 		return $this->_get('orderId');
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getOrderTags()
-	{
-		return $this->_get('orderTags');
 	}
 
 	/**
@@ -199,30 +191,6 @@ class OrderPaymentResponse extends \Magento\Framework\Api\AbstractExtensibleObje
 	public function getBackUrl()
 	{
 		return $this->_get('backUrl');
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getCardId()
-	{
-		return $this->_get('cardId');
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getCustomerTags()
-	{
-		return $this->_get('customerTags');
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getInvoiceEmail()
-	{
-		return $this->_get('invoiceEmail');
 	}
 
 	/**

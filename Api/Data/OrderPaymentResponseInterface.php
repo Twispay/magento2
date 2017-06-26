@@ -121,13 +121,6 @@ interface OrderPaymentResponseInterface
 	public function getOrderId();
 
 	/**
-	 * Gets an indexed array of string values associated with the order
-	 *
-	 * @return array|null
-	 */
-	public function getOrderTags();
-
-	/**
 	 * Gets the indexed array of string values – contains name of the products.
 	 *
 	 * @return array|null
@@ -170,28 +163,6 @@ interface OrderPaymentResponseInterface
 	 * @return string|null
 	 */
 	public function getBackUrl();
-
-	/**
-	 * A preferred card ID
-	 *
-	 * @return string|null
-	 */
-	public function getCardId();
-
-	/**
-	 * Indexed array of tags associated with the customer
-	 *
-	 * @return array|null
-	 */
-	public function getCustomerTags();
-
-	/**
-	 * Returns an alternative email address to send invoice to
-	 *
-	 * @return string|null
-	 */
-	public function getInvoiceEmail();
-
 	/**
 	 * Verification hash for the payment details
 	 *

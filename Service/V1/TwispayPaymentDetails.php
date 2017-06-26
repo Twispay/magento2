@@ -98,7 +98,7 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 		$units = array();
 		$unitPrice = array();
 		$subTotal = array();
-		foreach ($order->getAllItems() as $key => $item) {
+		foreach ($order->getAllVisibleItems() as $key => $item) {
 			$items[$key] = $item->getName();
 			$subTotal[$key] = strval(number_format((float)$item->getRowTotalInclTax(), 2, '.', ''));
 			$unitPrice[$key] = strval(number_format((float)$item->getPriceInclTax(), 2, '.', ''));
@@ -108,7 +108,7 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 		// Add the shipping price
 		if ($order->getShippingAmount() > 0) {
 			$index             = count($items);
-			$items[$index]     = __('Shipping') . ' (' . $order->getShippingDescription() . ')';
+			$items[$index]     = __('Shipping')->render();
 			$unitPrice[$index] = strval(number_format((float) $order->getShippingAmount(), 2, '.', ''));;
 			$units[$index]     = "";
 			$subTotal[$index]  = strval(number_format((float) $order->getShippingAmount(), 2, '.', ''));
@@ -124,24 +124,19 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 			'amount' => strval(number_format((float)$order->getGrandTotal(), 2, '.', '')),
 			'orderType' => $this->config->getOrderType(),
 			'cardTransactionMode' => $this->config->getCardTransactionMode(),
-			'firstName' => $address->getFirstname() != null ? $address->getFirstname() : "",
-			'lastName' => $address->getLastname() != null ? $address->getLastname() : "",
-			'city' => $address->getCity() != null ? $address->getCity() : "",
-			'state' => $address->getRegion() != null ? $address->getRegion() : "",
-			'country' => $address->getCountryId() != null ? $address->getCountryId() : "",
-			'zipCode' => $address->getPostcode() != null ? $address->getPostcode() : "",
-			'address' => $address->getStreetFull() != null ? $address->getStreetFull() : "",
-			'email' => $address->getEmail() != null ? $address->getEmail() : "",
-			'phone' => $address->getTelephone() != null ? $address->getTelephone() : "",
+			'firstName' => $address->getFirstname() != null ? $address->getFirstname() : '',
+			'lastName' => $address->getLastname() != null ? $address->getLastname() : '',
+			'city' => $address->getCity() != null ? $address->getCity() : '',
+			'state' => $address->getRegionCode() != null ? $address->getRegionCode() : '',
+			'country' => $address->getCountryId() != null ? $address->getCountryId() : '',
+			'zipCode' => $address->getPostcode() != null ? preg_replace("/[^0-9]/", '', $address->getPostcode()) : '',
+			'address' => $address->getStreetFull() != null ? $address->getStreetFull() : '',
+			'email' => $address->getEmail() != null ? $address->getEmail() : '',
+			'phone' => $address->getTelephone() != null ? preg_replace("/[^0-9\+]/", '', $address->getTelephone()) : '',
 			'item' => $items,
-			'backUrl' => $this->helper->getBackUrl(),
-			'cardId' => "",
-			'customerTags' => $emptyStringArray,
-			'invoiceEmail' => "",
 			'unitPrice' => $unitPrice,
 			'units' => $units,
 			'subTotal' => $subTotal,
-			'orderTags' => $emptyStringArray,
 			'identifier' => '_' . $this->customerSession->getCustomerId()
 		];
 
