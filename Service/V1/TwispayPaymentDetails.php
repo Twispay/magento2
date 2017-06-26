@@ -134,6 +134,7 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 			'email' => $address->getEmail() != null ? $address->getEmail() : '',
 			'phone' => $address->getTelephone() != null ? preg_replace("/[^0-9\+]/", '', $address->getTelephone()) : '',
 			'item' => $items,
+			'backUrl' => $this->helper->getBackUrl(),
 			'unitPrice' => $unitPrice,
 			'units' => $units,
 			'subTotal' => $subTotal,
