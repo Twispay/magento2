@@ -95,8 +95,8 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 		$subTotal = array();
 		foreach ($order->getAllItems() as $key => $item) {
 			$items[$key] = $item->getName();
-			$subTotal[$key] = strval(number_format((float)$item->getBaseRowTotal(), 2, '.', ''));
-			$unitPrice[$key] = strval(number_format((float)$item->getPrice(), 2, '.', ''));
+			$subTotal[$key] = strval(number_format((float)$item->getRowTotalInclTax(), 2, '.', ''));
+			$unitPrice[$key] = strval(number_format((float)$item->getPriceInclTax(), 2, '.', ''));
 			$units[$key] = (int)$item->getQtyOrdered();
 		}
 

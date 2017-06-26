@@ -112,6 +112,8 @@ class BackPayment extends Action
 
 		$successPage = $this->config->getSuccessPage();
 
+		$this->log->debug("Redirecting:" + $successPage);
+
 		$this->_redirect($successPage);
 	}
 }
