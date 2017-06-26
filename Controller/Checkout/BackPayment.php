@@ -8,10 +8,15 @@ use Magento\Quote\Model\QuoteIdMaskFactory;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Framework\Webapi\ServiceInputProcessor;
 use Magento\Sales\Model\OrderFactory;
-use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Customer\Model\Session;
+use Magento\Framework\Exception\LocalizedException;
 
+/**
+ * This controller handles the payment back URL
+ *
+ * @package Twispay\Payments\Controller\Checkout
+ */
 class BackPayment extends Action
 {
 	/**
@@ -60,10 +65,17 @@ class BackPayment extends Action
 	private $log;
 
 	/**
+	 * @var \Twispay\Payments\Helper\Payment
+	 */
+	private $helper;
+
+	/**
 	 * Constructor
+	 *
 	 * @param \Magento\Framework\App\Action\Context $context
 	 * @param \Twispay\Payments\Logger\Logger $twispayLogger
 	 * @param \Twispay\Payments\Model\Config $config
+	 * @param \Twispay\Payments\Helper\Payment $helper
 	 * @param CartManagementInterface $quoteManagement
 	 * @param QuoteIdMaskFactory $quoteIdMaskFactory
 	 * @param CartRepositoryInterface $cartRepository
@@ -71,12 +83,12 @@ class BackPayment extends Action
 	 * @param \Magento\Checkout\Model\Session $checkoutSession
 	 * @param ServiceInputProcessor $inputProcessor
 	 * @param OrderFactory $orderFactory
-	 * @param JsonFactory $resultJsonFactory
 	 */
 	public function __construct(
 		\Magento\Framework\App\Action\Context $context,
 		\Twispay\Payments\Logger\Logger $twispayLogger,
 		\Twispay\Payments\Model\Config $config,
+		\Twispay\Payments\Helper\Payment $helper,
 		CartManagementInterface $quoteManagement,
 		QuoteIdMaskFactory $quoteIdMaskFactory,
 		CartRepositoryInterface $cartRepository,
@@ -86,8 +98,11 @@ class BackPayment extends Action
 		OrderFactory $orderFactory
 	)
 	{
+		parent::__construct($context);
+
 		$this->log = $twispayLogger;
 		$this->config = $config;
+		$this->helper = $helper;
 		$this->quoteManagement = $quoteManagement;
 		$this->quoteIdMaskFactory = $quoteIdMaskFactory;
 		$this->cartRepository = $cartRepository;
@@ -96,7 +111,8 @@ class BackPayment extends Action
 		$this->inputProcessor = $inputProcessor;
 		$this->_orderFactory = $orderFactory;
 
-		parent::__construct($context);
+
+
 	}
 
 	/**
@@ -110,10 +126,28 @@ class BackPayment extends Action
 		$response = $this->getRequest()->getParams();
 		$this->log->debug(print_r($response, true));
 
-		$successPage = $this->config->getSuccessPage();
+		$result = null;
+		if (array_key_exists('opensslResult', $response)) {
+			try {
+				$result = $this->helper->decryptResponse($response['opensslResult']);
 
-		$this->log->debug("Redirecting:" + $successPage);
+				$this->log->debug(print_r($result, true));
+			} catch (LocalizedException $ex) {
+				$this->log->error($ex->getMessage(), $ex);
+			}
+		}
 
-		$this->_redirect($successPage);
+		if ($result && ($result['status'] == 'complete-ok' || $result['status'] == 'in-progress')) {
+
+			$this->messageManager->addSuccessMessage(__('Payment has been successfully authorized. Transaction id: %s'), $result['transactionId']);
+
+			$successPage = $this->config->getSuccessPage();
+			$this->log->debug("Redirecting:" + $successPage);
+			$this->_redirect($successPage);
+		} else {
+			$this->messageManager->addErrorMessage(__('Failed to complete payment.'));
+			$this->_redirect('checkout/cart');
+		}
+
 	}
 }

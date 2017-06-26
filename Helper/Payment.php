@@ -2,6 +2,8 @@
 
 namespace Twispay\Payments\Helper;
 
+use Magento\Framework\Exception\LocalizedException;
+
 /**
  * Helper class for everything that has to do with payment
  */
@@ -97,4 +99,40 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
 			}
 		}
 	}
+
+	/**
+	 * This method computes the checksum on the given data array
+	 *
+	 * @param string $encrypted
+	 * @return array the decrypted response
+	 */
+	public function decryptResponse($encrypted) {
+		// Get the API key from the cache to be used as a decryption key
+		$apiKey = $this->config->getApiKey();
+
+		$encrypted = (string)$encrypted;
+		if (!strlen($encrypted)) {
+			return null;
+		}
+
+		if (strpos($encrypted, ',') !== false) {
+			$encryptedParts = explode(',', $encrypted, 2);
+			$iv = base64_decode($encryptedParts[0]);
+			if (false === $iv) {
+				throw new LocalizedException("Invalid encryption iv");
+			}
+			$encrypted = base64_decode($encryptedParts[1]);
+			if (false === $encrypted) {
+				throw new LocalizedException("Invalid encrypted data");
+			}
+			$decrypted = openssl_decrypt($encrypted, 'AES-256-CBC', $apiKey, OPENSSL_RAW_DATA, $iv);
+			if (false === $decrypted) {
+				throw new LocalizedException("Data could not be decrypted");
+			}
+
+			return $decrypted;
+		}
+
+		return null;
+		}
 }

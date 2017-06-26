@@ -1,8 +1,6 @@
 <?php
 namespace Twispay\Payments\Service\V1;
 
-
-
 use Twispay\Payments\Api\TwispayPaymentDetailsInterface;
 use \Magento\Sales\Model\Order;
 

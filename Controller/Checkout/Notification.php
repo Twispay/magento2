@@ -8,15 +8,16 @@ use Magento\Quote\Model\QuoteIdMaskFactory;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Framework\Webapi\ServiceInputProcessor;
 use Magento\Sales\Model\OrderFactory;
-use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Customer\Model\Session;
 
 /**
- * This controller handles the back payment URL
+ * This controller handles the server to server notification
+ *
  * @package Twispay\Payments\Controller\Checkout
  */
-class PlaceOrder extends Action
+class Notification extends Action
 {
 	/**
 	 * @var CartManagementInterface
@@ -54,12 +55,23 @@ class PlaceOrder extends Action
 	protected $_orderFactory;
 
 	/**
-	 * @var JsonFactory
+	 * @var ResultFactory
 	 */
-	protected $resultJsonFactory;
+	protected $resultFactory;
+
+	/**
+	 * @var \Twispay\Payments\Logger\Logger
+	 */
+	private $log;
+
+	/**
+	 * @var \Twispay\Payments\Helper\Payment
+	 */
+	private $helper;
 
 	/**
 	 * Constructor
+	 *
 	 * @param \Magento\Framework\App\Action\Context $context
 	 * @param CartManagementInterface $quoteManagement
 	 * @param QuoteIdMaskFactory $quoteIdMaskFactory
@@ -68,7 +80,9 @@ class PlaceOrder extends Action
 	 * @param \Magento\Checkout\Model\Session $checkoutSession
 	 * @param ServiceInputProcessor $inputProcessor
 	 * @param OrderFactory $orderFactory
-	 * @param JsonFactory $resultJsonFactory
+	 * @param ResultFactory $resultFactory
+	 * @param \Twispay\Payments\Logger\Logger $twispayLogger
+	 * @param \Twispay\Payments\Helper\Payment $helper
 	 */
 	public function __construct(
 		\Magento\Framework\App\Action\Context $context,
@@ -79,7 +93,9 @@ class PlaceOrder extends Action
 		\Magento\Checkout\Model\Session $checkoutSession,
 		ServiceInputProcessor $inputProcessor,
 		OrderFactory $orderFactory,
-		JsonFactory $resultJsonFactory
+		ResultFactory $resultFactory,
+		\Twispay\Payments\Logger\Logger $twispayLogger,
+		\Twispay\Payments\Helper\Payment $helper
 	)
 	{
 		$this->quoteManagement = $quoteManagement;
@@ -89,23 +105,43 @@ class PlaceOrder extends Action
 		$this->_checkoutSession = $checkoutSession;
 		$this->inputProcessor = $inputProcessor;
 		$this->_orderFactory = $orderFactory;
-		$this->resultJsonFactory = $resultJsonFactory;
+		$this->resultFactory = $resultFactory;
+		$this->log = $twispayLogger;
+		$this->helper = $helper;
 
 		parent::__construct($context);
 	}
 
 	/**
-	 * View CMS page action
+	 * Handle the server-to-server notification
 	 *
 	 * @return \Magento\Framework\Controller\ResultInterface
 	 */
 	public function execute()
 	{
+		$oResponse = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_RAW);
 
-		$result = $this->resultJsonFactory->create();
-		
-        return $result->setData([
-            'success' => true
-        ]);
+		$response = $this->getRequest()->getParams();
+		$this->log->debug(print_r($response, true));
+
+		$result = null;
+		if (array_key_exists('opensslResult', $response)) {
+			try {
+				$result = $this->helper->decryptResponse($response['opensslResult']);
+
+				$this->log->debug(print_r($result, true));
+			} catch (LocalizedException $ex) {
+				$this->log->error($ex->getMessage(), $ex);
+			}
+		}
+
+		if ($result && ($result['status'] == 'complete-ok' || $result['status'] == 'in-progress')) {
+			$oResponse->setContents('OK');
+		} else {
+			$oResponse->setContents('ERROR');
+
+		}
+
+		return $oResponse;
 	}
 }
