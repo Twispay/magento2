@@ -120,6 +120,8 @@ class Notification extends Action
 	 */
 	public function execute()
 	{
+		$this->log->info("Received server to server notification.");
+
 		$oResponse = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_RAW);
 
 		$response = $this->getRequest()->getParams();
