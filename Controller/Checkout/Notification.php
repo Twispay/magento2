@@ -150,10 +150,13 @@ class Notification extends Action
 			$orderId = $result->externalOrderId;
 			$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 			$order = $objectManager->create('\Magento\Sales\Model\Order') ->load($orderId);
-			$order->setState(Order::STATE_PROCESSING, true);
-			$order->setStatus(Order::STATE_PROCESSING);
-			$order->addStatusToHistory($order->getStatus(), 'Order paid successfully with reference ' . $result->transactionId);
-			$order->save();
+
+			if ($order->getState() == Order::STATE_PENDING_PAYMENT) {
+				$order->setState(Order::STATE_PROCESSING, true);
+				$order->setStatus(Order::STATE_PROCESSING);
+				$order->addStatusToHistory($order->getStatus(), 'Order paid successfully with reference ' . $result->transactionId);
+				$order->save();
+			}
 
 			$oResponse->setContents('OK');
 		} else {

@@ -146,6 +146,15 @@ class BackPayment extends Action
 
 		if ($result && isset($result->status) && ($result->status == 'complete-ok' || $result->status == 'in-progress')) {
 
+			// Set the status of this order to processing
+			$orderId = $result->externalOrderId;
+			$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+			$order = $objectManager->create('\Magento\Sales\Model\Order') ->load($orderId);
+			$order->setState(Order::STATE_PROCESSING, true);
+			$order->setStatus(Order::STATE_PROCESSING);
+			$order->addStatusToHistory($order->getStatus(), 'Order paid successfully with reference ' . $result->transactionId);
+			$order->save();
+
 			$this->messageManager->addSuccessMessage(__('Payment has been successfully authorized. Transaction id: %s'), $result->transactionId);
 
 			$successPage = $this->config->getSuccessPage();
