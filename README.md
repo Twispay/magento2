@@ -22,7 +22,7 @@ find [The Official Twispay Payment Gateway Extension][marketplace].
 2. Enter following commands to install module:
 
     ```bash
-    composer config repositories.twispay git http://git.webliant.net/twispay/magento2-payments.git
+    composer config repositories.twispay git https://github.com/Twispay/magento2.git
     composer require twispay/magento2-payments:dev-master
     ```
    Wait while dependencies are updated.
@@ -44,4 +44,4 @@ A functional description of the extension can be found on the [wiki page][doc]
 
 [twispay]: http://twispay.com/
 [marketplace]: https://marketplace.magento.com/twispay-magento2-payments.html
-[doc]: http://git.webliant.net/twispay/wiki
+[doc]: https://docs.google.com/document/d/1GSCO5LL5DviqLvcDjwqM-4gN6WmDVyn9W0yN5Joqh_A
