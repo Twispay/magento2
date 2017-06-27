@@ -1,5 +1,5 @@
 {
-  "name": "twispay/module-payments",
+  "name": "twispay/magento2-payments",
   "description": "Official Twispay Payments Extension for Magento2",
   "type": "magento2-module",
   "version": "1.0.0",
