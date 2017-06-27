@@ -10,6 +10,7 @@ use Magento\Framework\Webapi\ServiceInputProcessor;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Customer\Model\Session;
+use \Magento\Sales\Model\Order;
 use Magento\Framework\Exception\LocalizedException;
 
 /**
