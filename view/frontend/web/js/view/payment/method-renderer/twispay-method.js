@@ -23,15 +23,9 @@ define(
 		'use strict';
 		var wpConfig = window.checkoutConfig.payment.twispay;
 
-		var billingAddress = quote.billingAddress();
-
 		return Component.extend({
 			defaults: {
-				template: 'Twispay_Payments/payment/twispay'/*,
-				firstname: billingAddress ? billingAddress.firstname : "",
-				lastname: billingAddress ? billingAddress.lastname : "",
-				country: billingAddress ? billingAddress.country : "",
-				city: billingAddress ? billingAddress.city : ""*/
+				template: 'Twispay_Payments/payment/twispay'
 			},
 
 			redirectAfterPlaceOrder: false,

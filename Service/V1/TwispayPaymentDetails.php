@@ -127,7 +127,7 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 			'firstName' => $address->getFirstname() != null ? $address->getFirstname() : '',
 			'lastName' => $address->getLastname() != null ? $address->getLastname() : '',
 			'city' => $address->getCity() != null ? $address->getCity() : '',
-			'state' => $address->getRegionCode() != null ? $address->getRegionCode() : '',
+			'state' => ($address->getCountryId() == 'US' && $address->getRegionCode() != null) ? $address->getRegionCode() : '',
 			'country' => $address->getCountryId() != null ? $address->getCountryId() : '',
 			'zipCode' => $address->getPostcode() != null ? preg_replace("/[^0-9]/", '', $address->getPostcode()) : '',
 			'address' => $address->getStreet() != null ? join(',', $address->getStreet()) : '',
