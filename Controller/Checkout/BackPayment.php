@@ -117,7 +117,7 @@ class BackPayment extends Action
 	}
 
 	/**
-	 * View CMS page action
+	 * Handle the back URL redirect from Twispay gateway
 	 *
 	 * @return \Magento\Framework\Controller\ResultInterface
 	 */
@@ -153,10 +153,10 @@ class BackPayment extends Action
 			$order = $objectManager->create('\Magento\Sales\Model\Order') ->load($orderId);
 			$order->setState(Order::STATE_PROCESSING, true);
 			$order->setStatus(Order::STATE_PROCESSING);
-			$order->addStatusToHistory($order->getStatus(), __('Order paid successfully with reference %s', $result->transactionId));
+			$order->addStatusToHistory($order->getStatus(), __('Order paid successfully with reference %1', $result->transactionId));
 			$order->save();
 
-			$this->messageManager->addSuccessMessage(__('Payment has been successfully authorized. Transaction id: %s'), $result->transactionId);
+			$this->messageManager->addSuccessMessage(__('Payment has been successfully authorized. Transaction id: %1'), $result->transactionId);
 
 			$successPage = $this->config->getSuccessPage();
 			$this->log->debug("Redirecting:" . $successPage);

@@ -154,7 +154,7 @@ class Notification extends Action
 			if ($order->getState() == Order::STATE_PENDING_PAYMENT) {
 				$order->setState(Order::STATE_PROCESSING, true);
 				$order->setStatus(Order::STATE_PROCESSING);
-				$order->addStatusToHistory($order->getStatus(), 'Order paid successfully with reference ' . $result->transactionId);
+				$order->addStatusToHistory($order->getStatus(), __('Order paid successfully with reference %1', $result->transactionId));
 				$order->save();
 			}
 
