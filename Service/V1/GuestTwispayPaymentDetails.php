@@ -1,15 +1,15 @@
 <?php
 namespace Twispay\Payments\Service\V1;
 
-use Twispay\Payments\Api\TwispayPaymentDetailsInterface;
+use Twispay\Payments\Api\GuestTwispayPaymentDetailsInterface;
 use \Magento\Sales\Model\Order;
 
 /**
- * Class TwispayPaymentDetails
+ * Class GuestTwispayPaymentDetails
  * @package Twispay\Payments\Service\V1
  * @author Webliant Software
  */
-class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
+class GuestTwispayPaymentDetails implements GuestTwispayPaymentDetailsInterface
 {
 
 	/**
@@ -85,13 +85,12 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 	{
 		// Get the details of the last order
 		$order = $this->checkoutSession->getLastRealOrder();
-
-		//TODO check if the user is authenticated first
+		$quote = $this->checkoutSession->getQuote();
 
 		// Set the status of this order to pending payment
 		$order->setState(Order::STATE_PENDING_PAYMENT, true);
 		$order->setStatus(Order::STATE_PENDING_PAYMENT);
-		$order->addStatusToHistory($order->getStatus(), 'Redirecting to Twispay payment gateway');
+		$order->addStatusToHistory($order->getStatus(), __('Redirecting to Twispay payment gateway'));
 		$order->save();
 
 		$address = $order->getBillingAddress();
@@ -140,7 +139,7 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 			'unitPrice' => $unitPrice,
 			'units' => $units,
 			'subTotal' => $subTotal,
-			'identifier' => '_' . $this->customerSession->getCustomerId()
+			'identifier' => $quote->getCustomerEmail()
 		];
 
 		$oResponse = $this->responseFactory->create();
