@@ -152,7 +152,7 @@ class BackPayment extends Action
 			$order = $objectManager->create('\Magento\Sales\Model\Order') ->load($orderId);
 			$order->setState(Order::STATE_PROCESSING, true);
 			$order->setStatus(Order::STATE_PROCESSING);
-			$order->addStatusToHistory($order->getStatus(), 'Order paid successfully with reference ' . $result->transactionId);
+			$order->addStatusToHistory($order->getStatus(), __('Order paid successfully with reference %s', $result->transactionId));
 			$order->save();
 
 			$this->messageManager->addSuccessMessage(__('Payment has been successfully authorized. Transaction id: %s'), $result->transactionId);
