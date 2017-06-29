@@ -8,17 +8,10 @@
  * @author      Webliant Software
  */
 -->
-<payment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="../../../Magento/Payment/etc/payment.xsd">
-    <groups>
-        <group id="offline">
-            <label>Twispay Payment Methods</label>
-        </group>
-    </groups>
+<payment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Payment:etc/payment.xsd">
     <methods>
         <method name="twispay">
             <allow_multiple_address>1</allow_multiple_address>
         </method>
-        
     </methods>
 </payment>

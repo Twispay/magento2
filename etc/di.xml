@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-	<preference for="Twispay\Payments\Api\TwispayPaymentDetailsInterface" type="Twispay\Payments\Service\V1\TwispayPaymentDetails" />
-	<preference for="Twispay\Payments\Api\GuestTwispayPaymentDetailsInterface" type="Twispay\Payments\Service\V1\GuestTwispayPaymentDetails" />
-	<preference for="Twispay\Payments\Api\Data\OrderPaymentResponseInterface" type="Twispay\Payments\Service\V1\Data\OrderPaymentResponse" />
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+	<preference for="Twispay\Payments\Api\TwispayPaymentDetailsInterface"
+	            type="Twispay\Payments\Service\V1\TwispayPaymentDetails"/>
+	<preference for="Twispay\Payments\Api\GuestTwispayPaymentDetailsInterface"
+	            type="Twispay\Payments\Service\V1\GuestTwispayPaymentDetails"/>
+	<preference for="Twispay\Payments\Api\Data\OrderPaymentResponseInterface"
+	            type="Twispay\Payments\Service\V1\Data\OrderPaymentResponse"/>
 
 	<type name="Twispay\Payments\Logger\Handler">
 		<arguments>
@@ -13,9 +17,10 @@
 	<type name="Twispay\Payments\Logger\Logger">
 		<arguments>
 			<argument name="name" xsi:type="string">twispayLogger</argument>
-			<argument name="handlers"  xsi:type="array">
+			<argument name="handlers" xsi:type="array">
 				<item name="system" xsi:type="object">Twispay\Payments\Logger\Handler</item>
 			</argument>
 		</arguments>
 	</type>
+
 </config>

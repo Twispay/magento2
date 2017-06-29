@@ -139,7 +139,7 @@ class GuestTwispayPaymentDetails implements GuestTwispayPaymentDetailsInterface
 			'unitPrice' => $unitPrice,
 			'units' => $units,
 			'subTotal' => $subTotal,
-			'identifier' => $quote->getCustomerEmail()
+			'identifier' => $address->getEmail()
 		];
 
 		$oResponse = $this->responseFactory->create();

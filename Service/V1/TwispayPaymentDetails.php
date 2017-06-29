@@ -87,7 +87,6 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 		$order = $this->checkoutSession->getLastRealOrder();
 
 		//TODO check if the user is authenticated first
-
 		// Set the status of this order to pending payment
 		$order->setState(Order::STATE_PENDING_PAYMENT, true);
 		$order->setStatus(Order::STATE_PENDING_PAYMENT);
@@ -121,7 +120,7 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
 
 		$data = [
 			'siteId' => strval($this->config->getSiteId()),
-			'orderId' => strval((int)$order->getRealOrderId()),
+			'orderId' => strval((int)$order->getId()),
 			'currency' => $order->getOrderCurrencyCode(),
 			'amount' => strval(number_format((float)$order->getGrandTotal(), 2, '.', '')),
 			'orderType' => $this->config->getOrderType(),

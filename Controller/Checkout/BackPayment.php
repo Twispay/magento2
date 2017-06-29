@@ -8,10 +8,10 @@ use Magento\Quote\Model\QuoteIdMaskFactory;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Framework\Webapi\ServiceInputProcessor;
 use Magento\Sales\Model\OrderFactory;
-use Magento\Framework\Exception\CouldNotSaveException;
-use Magento\Customer\Model\Session;
+use Magento\Sales\Model\Order\Payment\Transaction;
 use \Magento\Sales\Model\Order;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\PaymentException;
 
 /**
  * This controller handles the payment back URL
@@ -140,27 +140,26 @@ class BackPayment extends Action
 					$this->log->error("Decoded response is NULL");
 				}
 
-			} catch (LocalizedException $ex) {
+			} catch (\Exception $ex) {
 				$this->log->error($ex->getMessage(), $ex);
 			}
 		}
 
 		if ($result && isset($result->status) && ($result->status == 'complete-ok' || $result->status == 'in-progress')) {
 
-			// Set the status of this order to processing
-			$orderId = $result->externalOrderId;
-			$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-			$order = $objectManager->create('\Magento\Sales\Model\Order') ->load($orderId);
-			$order->setState(Order::STATE_PROCESSING, true);
-			$order->setStatus(Order::STATE_PROCESSING);
-			$order->addStatusToHistory($order->getStatus(), __('Order paid successfully with reference %1', $result->transactionId));
-			$order->save();
+			try {
+				$this->helper->processGatewayResponse($result);
 
-			$this->messageManager->addSuccessMessage(__('Payment has been successfully authorized. Transaction id: %1'), $result->transactionId);
+				$this->messageManager->addSuccessMessage(__('Payment has been successfully authorized. Transaction id: %1'), $result->transactionId);
 
-			$successPage = $this->config->getSuccessPage();
-			$this->log->debug("Redirecting:" . $successPage);
-			$this->_redirect($successPage);
+				$successPage = $this->config->getSuccessPage();
+				$this->log->debug("Redirecting:" . $successPage);
+				$this->_redirect($successPage);
+			} catch (PaymentException $e) {
+				$this->messageManager->addErrorMessage($e->getMessage());
+				$this->_redirect('checkout/cart');
+			}
+
 		} else {
 			$this->messageManager->addErrorMessage(__('Failed to complete payment.'));
 			$this->_redirect('checkout/cart');

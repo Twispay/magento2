@@ -55,6 +55,10 @@ class Config
 		return $this->getConfigValue('card_transaction_mode');
 	}
 
+	public function isEmailInvoice() {
+		return !!$this->getConfigValue('email_invoice');
+	}
+
 	private function getConfigValue($value) {
 		return $this->_scopeConfigInterface->getValue('payment/twispay/' . $value);
 	}

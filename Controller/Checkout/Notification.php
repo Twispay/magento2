@@ -3,15 +3,15 @@
 namespace Twispay\Payments\Controller\Checkout;
 
 use Magento\Framework\App\Action\Action;
+use Magento\Framework\Exception\PaymentException;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Model\QuoteIdMaskFactory;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Framework\Webapi\ServiceInputProcessor;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Framework\Controller\ResultFactory;
-use Magento\Framework\Exception\CouldNotSaveException;
-use Magento\Customer\Model\Session;
-use \Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Payment\Transaction;
+use Magento\Sales\Model\Order;
 
 /**
  * This controller handles the server to server notification
@@ -123,9 +123,7 @@ class Notification extends Action
 		$this->log->info("Received server to server notification.");
 
 		$oResponse = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_RAW);
-
 		$response = $this->getRequest()->getParams();
-		$this->log->debug(print_r($response, true));
 
 		$result = null;
 		if (array_key_exists('opensslResult', $response)) {
@@ -139,29 +137,21 @@ class Notification extends Action
 				} else {
 					$this->log->error("Decoded response is NULL");
 				}
-			} catch (LocalizedException $ex) {
+			} catch (\Exception $ex) {
 				$this->log->error($ex->getMessage(), $ex);
 			}
 		}
 
-		if ($result && ($result['status'] == 'complete-ok' || $result['status'] == 'in-progress')) {
-
-			// Set the status of this order to processing
-			$orderId = $result->externalOrderId;
-			$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-			$order = $objectManager->create('\Magento\Sales\Model\Order') ->load($orderId);
-
-			if ($order->getState() == Order::STATE_PENDING_PAYMENT) {
-				$order->setState(Order::STATE_PROCESSING, true);
-				$order->setStatus(Order::STATE_PROCESSING);
-				$order->addStatusToHistory($order->getStatus(), __('Order paid successfully with reference %1', $result->transactionId));
-				$order->save();
+		if ($result && isset($result->status) && ($result->status == 'complete-ok' || $result->status == 'in-progress')) {
+			try {
+				$this->helper->processGatewayResponse($result);
+				$oResponse->setContents('OK');
+			} catch (PaymentException $e) {
+				$this->log->error($e->getMessage(), $e);
+				$oResponse->setContents('ERROR');
 			}
-
-			$oResponse->setContents('OK');
 		} else {
 			$oResponse->setContents('ERROR');
-
 		}
 
 		return $oResponse;

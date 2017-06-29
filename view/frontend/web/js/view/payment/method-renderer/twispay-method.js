@@ -137,12 +137,6 @@ define(
 
 				document.body.appendChild(form);
 				form.submit();
-			},
-
-			getData: function() {
-				return {
-					method: "twispay"
-				};
 			}
 		});
 	}
