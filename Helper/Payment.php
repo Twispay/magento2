@@ -8,6 +8,8 @@ use Magento\Framework\Exception\PaymentException;
 
 /**
  * Helper class for everything that has to do with payment
+ *
+ * @package Twispay\Payments\Helper
  */
 class Payment extends \Magento\Framework\App\Helper\AbstractHelper
 {
@@ -179,7 +181,8 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
 		}
 
 		// Add payment transaction
-		$paymentMethod = $order->getPayment()->getMethodInstance();
+		$payment = $order->getPayment();
+		$paymentMethod = $payment->getMethodInstance();
 
 		if ($paymentMethod->getCode() !== 'twispay') {
 			$this->log->error('Unsupported payment method', [$paymentMethod->getCode()]);
@@ -187,7 +190,8 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
 		}
 
 		if ($order->getState() == Order::STATE_PENDING_PAYMENT) {
-			$order->getPayment()->setTransactionId($transactionId);
+			$payment->setTransactionId($transactionId);
+			$payment->setLastTransId($transactionId);
 
 			// Create the transaction
 			/** @var \Magento\Sales\Model\Order\Payment\Transaction $transaction */
@@ -195,6 +199,13 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
 			$transaction->setAdditionalInformation(Transaction::RAW_DETAILS, $details);
 			$transaction->setCreatedAt($timestamp);
 			$transaction->save();
+
+			$payment->addTransactionCommentsToOrder(
+				$transaction,
+				__('The authorized amount is %1.', $order->getBaseCurrency()->formatTxt($order->getGrandTotal()))
+			);
+			$payment->setParentTransactionId(null);
+			$payment->save();
 
 			// Update the order state
 			$order->setState(Order::STATE_PROCESSING, true);
