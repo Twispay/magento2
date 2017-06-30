@@ -8,5 +8,5 @@ namespace Twispay\Payments\Logger;
  */
 class Logger extends \Monolog\Logger
 {
-	//
+    //
 }

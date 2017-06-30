@@ -1,35 +1,35 @@
 {
-  "name": "twispay/module-payments",
-  "description": "Official Twispay Payments Extension for Magento2",
-  "type": "magento2-module",
-  "version": "1.0.0",
-  "require": {
-    "php": "~5.6.5|7.0.2|7.0.4|~7.0.6",
-    "magento/module-config": "100.1.*",
-    "magento/module-store": "100.1.*",
-    "magento/module-checkout": "100.1.*",
-    "magento/module-catalog": "100.1.*",
-    "magento/module-sales": "100.1.*",
-    "magento/module-customer": "100.1.*",
-    "magento/module-payment": "100.1.*",
-    "magento/module-quote": "100.1.*",
-    "magento/module-backend": "100.1.*",
-    "magento/module-directory": "100.1.*",
-    "magento/module-theme": "100.1.*",
-    "magento/framework": "100.1.*"
-  },
-  "repositories": [
-    {
-      "type": "vcs",
-      "url":  "git@github.com:Twispay/magento2.git"
-    }
-  ],
-  "autoload": {
-    "files": [
-      "registration.php"
+    "name": "twispay/module-payments",
+    "description": "Official Twispay Payments Extension for Magento2",
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "require": {
+        "php": "~5.6.5|7.0.2|7.0.4|~7.0.6",
+        "magento/module-config": "100.1.*",
+        "magento/module-store": "100.1.*",
+        "magento/module-checkout": "100.1.*",
+        "magento/module-catalog": "100.1.*",
+        "magento/module-sales": "100.1.*",
+        "magento/module-customer": "100.1.*",
+        "magento/module-payment": "100.1.*",
+        "magento/module-quote": "100.1.*",
+        "magento/module-backend": "100.1.*",
+        "magento/module-directory": "100.1.*",
+        "magento/module-theme": "100.1.*",
+        "magento/framework": "100.1.*"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url":  "git@github.com:Twispay/magento2.git"
+        }
     ],
-    "psr-4": {
-      "Twispay\\Payments\\": ""
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Twispay\\Payments\\": ""
+        }
     }
-  }
 }

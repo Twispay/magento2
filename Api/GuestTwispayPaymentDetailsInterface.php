@@ -10,11 +10,10 @@ namespace Twispay\Payments\Api;
 interface GuestTwispayPaymentDetailsInterface
 {
 
-	/**
-	 * @param string $orderId
-	 *
-	 * @return \Twispay\Payments\Service\V1\Data\OrderPaymentResponse
-	 */
-	public function getPaymentDetails($orderId);
-
+    /**
+     * @param string $orderId
+     *
+     * @return \Twispay\Payments\Service\V1\Data\OrderPaymentResponse
+     */
+    public function getPaymentDetails($orderId);
 }

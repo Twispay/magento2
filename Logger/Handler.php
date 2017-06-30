@@ -11,30 +11,29 @@ use Monolog\Formatter\LineFormatter;
  */
 class Handler extends \Magento\Framework\Logger\Handler\Base
 {
-	/**
-	 * Logging level
-	 * @var int
-	 */
-	protected $loggerType = \Monolog\Logger::DEBUG;
+    /**
+     * Logging level
+     * @var int
+     */
+    protected $loggerType = \Monolog\Logger::DEBUG;
 
-	/**
-	 * File name
-	 * @var string
-	 */
-	protected $fileName = '/var/log/twispay.log';
+    /**
+     * File name
+     * @var string
+     */
+    protected $fileName = '/var/log/twispay.log';
 
-	/**
-	 * Constructor
-	 *
-	 * @param DriverInterface $filesystem
-	 * @param string $filePath
-	 */
-	public function __construct(
-		DriverInterface $filesystem,
-		$filePath = null
-	) {
-		parent::__construct($filesystem, $filePath);
-		$this->setFormatter(new LineFormatter(null, null, true, true));
-	}
-
+    /**
+     * Constructor
+     *
+     * @param DriverInterface $filesystem
+     * @param string $filePath
+     */
+    public function __construct(
+        DriverInterface $filesystem,
+        $filePath = null
+    ) {
+        parent::__construct($filesystem, $filePath);
+        $this->setFormatter(new LineFormatter(null, null, true, true));
+    }
 }

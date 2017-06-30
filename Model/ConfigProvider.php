@@ -21,13 +21,13 @@ class ConfigProvider implements ConfigProviderInterface
      */
     public function getConfig()
     {
-		$outConfig = [
+        $outConfig = [
             'payment' => [
                 'twispay' => [
                     'redirect_url' => $this->config->getRedirectUrl(),
                     'back_url' => $this->config->getBackUrl()
                 ]
-             ]
+            ]
         ];
         return $outConfig;
     }
