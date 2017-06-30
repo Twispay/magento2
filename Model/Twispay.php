@@ -112,6 +112,7 @@ class Twispay extends \Magento\Payment\Model\Method\AbstractMethod
 	 * @param object $stateObject
 	 *
 	 * @return $this
+	 * @throws /Magento\Framework\Exception\PaymentException
 	 * @api
 	 */
 	public function initialize($paymentAction, $stateObject)
@@ -121,7 +122,7 @@ class Twispay extends \Magento\Payment\Model\Method\AbstractMethod
 
 		/** @var \Magento\Sales\Model\Order $order */
 		$order = $payment->getOrder();
-		$order->setCanSendNewEmailFlag(false);
+//		$order->setCanSendNewEmailFlag(false);
 
 		// Set Initial Order Status
 		$state = \Magento\Sales\Model\Order::STATE_NEW;
