@@ -44,4 +44,4 @@ A functional description of the extension can be found on the [wiki page][doc]
 
 [twispay]: http://twispay.com/
 [marketplace]: https://marketplace.magento.com/twispay-magento2-payments.html
-[doc]: https://docs.google.com/document/d/1GSCO5LL5DviqLvcDjwqM-4gN6WmDVyn9W0yN5Joqh_A
+[doc]: https://twis.li/2spt8rx
