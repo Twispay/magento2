@@ -23,42 +23,42 @@ class Notification extends Action
     /**
      * @var CartManagementInterface
      */
-    protected $quoteManagement;
+    private $quoteManagement;
 
     /**
      * @var QuoteIdMaskFactory
      */
-    protected $quoteIdMaskFactory;
+    private $quoteIdMaskFactory;
 
     /**
      * @var CartRepositoryInterface
      */
-    protected $cartRepository;
+    private $cartRepository;
 
     /**
      * @var \Magento\Customer\Model\Session
      */
-    protected $_customerSession;
+    private $_customerSession;
 
     /**
      * @var \Magento\Checkout\Model\Session
      */
-    protected $_checkoutSession;
+    private $_checkoutSession;
 
     /**
      * @var ServiceInputProcessor
      */
-    protected $inputProcessor;
+    private $inputProcessor;
 
     /**
      * @var \Magento\Sales\Model\OrderFactory
      */
-    protected $_orderFactory;
+    private $_orderFactory;
 
     /**
      * @var ResultFactory
      */
-    protected $resultFactory;
+    private $resultFactory;
 
     /**
      * @var \Twispay\Payments\Logger\Logger
@@ -98,7 +98,7 @@ class Notification extends Action
         \Twispay\Payments\Logger\Logger $twispayLogger,
         \Twispay\Payments\Helper\Payment $helper
     ) {
-    
+
         $this->quoteManagement = $quoteManagement;
         $this->quoteIdMaskFactory = $quoteIdMaskFactory;
         $this->cartRepository = $cartRepository;

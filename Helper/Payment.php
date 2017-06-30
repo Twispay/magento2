@@ -18,12 +18,12 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @var \Magento\Store\Model\StoreManagerInterface
      */
-    protected $storeManager;
+    private $storeManager;
 
     /**
      * @var \Twispay\Payments\Logger\Logger
      */
-    protected $log;
+    private $log;
 
     /**
      * @var \Twispay\Payments\Model\Config

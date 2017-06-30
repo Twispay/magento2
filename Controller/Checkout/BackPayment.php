@@ -20,37 +20,27 @@ class BackPayment extends Action
     /**
      * @var CartManagementInterface
      */
-    protected $quoteManagement;
+    private $quoteManagement;
 
     /**
      * @var QuoteIdMaskFactory
      */
-    protected $quoteIdMaskFactory;
+    private $quoteIdMaskFactory;
 
     /**
      * @var CartRepositoryInterface
      */
-    protected $cartRepository;
-
-    /**
-     * @var \Magento\Customer\Model\Session
-     */
-    protected $_customerSession;
-
-    /**
-     * @var \Magento\Checkout\Model\Session
-     */
-    protected $_checkoutSession;
+    private $cartRepository;
 
     /**
      * @var ServiceInputProcessor
      */
-    protected $inputProcessor;
+    private $inputProcessor;
 
     /**
      * @var \Magento\Sales\Model\OrderFactory
      */
-    protected $_orderFactory;
+    private $orderFactory;
 
     /**
      * @var \Twispay\Payments\Model\Config
@@ -90,12 +80,10 @@ class BackPayment extends Action
         CartManagementInterface $quoteManagement,
         QuoteIdMaskFactory $quoteIdMaskFactory,
         CartRepositoryInterface $cartRepository,
-        \Magento\Customer\Model\Session $customerSession,
-        \Magento\Checkout\Model\Session $checkoutSession,
         ServiceInputProcessor $inputProcessor,
         OrderFactory $orderFactory
     ) {
-    
+
         parent::__construct($context);
 
         $this->log = $twispayLogger;
@@ -104,10 +92,8 @@ class BackPayment extends Action
         $this->quoteManagement = $quoteManagement;
         $this->quoteIdMaskFactory = $quoteIdMaskFactory;
         $this->cartRepository = $cartRepository;
-        $this->_customerSession = $customerSession;
-        $this->_checkoutSession = $checkoutSession;
         $this->inputProcessor = $inputProcessor;
-        $this->_orderFactory = $orderFactory;
+        $this->orderFactory = $orderFactory;
     }
 
     /**
@@ -138,11 +124,13 @@ class BackPayment extends Action
             }
         }
 
-        if ($result && isset($result->status) && ($result->status == 'complete-ok' || $result->status == 'in-progress')) {
+        if ($result && isset($result->status) &&
+                ($result->status == 'complete-ok' || $result->status == 'in-progress')) {
             try {
                 $this->helper->processGatewayResponse($result);
 
-                $this->messageManager->addSuccessMessage(__('Payment has been successfully authorized. Transaction id: %1'), $result->transactionId);
+                $message = __('Payment has been successfully authorized. Transaction id: %1', $result->transactionId);
+                $this->messageManager->addSuccessMessage($message);
 
                 $successPage = $this->config->getSuccessPage();
                 $this->log->debug("Redirecting:" . $successPage);
