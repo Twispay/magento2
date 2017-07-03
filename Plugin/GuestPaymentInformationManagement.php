@@ -48,9 +48,9 @@ class GuestPaymentInformationManagement
         \Magento\Quote\Api\Data\PaymentInterface $paymentMethod,
         \Magento\Quote\Api\Data\AddressInterface $billingAddress
     ) {
-        $orderId = $proceed($cartId, $email, $paymentMethod, $billingAddress);
-
         $paymentDetails = $subject->getPaymentInformation($cartId);
+
+        $orderId = $proceed($cartId, $email, $paymentMethod, $billingAddress);
 
         $data = $this->helper->prepareGatewayRequest($orderId, true);
 
