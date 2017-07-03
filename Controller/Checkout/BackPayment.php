@@ -16,7 +16,7 @@ class BackPayment extends Action
     /**
      * @var \Twispay\Payments\Model\Config
      */
-    private $config;
+    protected $config;
 
     /**
      * @var \Twispay\Payments\Logger\Logger

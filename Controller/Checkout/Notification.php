@@ -17,7 +17,7 @@ class Notification extends Action
     /**
      * @var ResultFactory
      */
-    private $resultFactory;
+    protected $resultFactory;
 
     /**
      * @var \Twispay\Payments\Logger\Logger
