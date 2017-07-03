@@ -23,12 +23,9 @@ class GuestPaymentInformationManagement
     public function __construct(
         \Twispay\Payments\Logger\Logger $twispayLogger,
         \Twispay\Payments\Helper\Payment $helper
-    )
-    {
+    ) {
         $this->log = $twispayLogger;
         $this->helper = $helper;
-
-        $this->log->debug("Plugin initialized....");
     }
 
     /**
@@ -50,9 +47,10 @@ class GuestPaymentInformationManagement
         $email,
         \Magento\Quote\Api\Data\PaymentInterface $paymentMethod,
         \Magento\Quote\Api\Data\AddressInterface $billingAddress
-    )
-    {
+    ) {
         $orderId = $proceed($cartId, $email, $paymentMethod, $billingAddress);
+
+        $paymentDetails = $subject->getPaymentInformation($cartId);
 
         $data = $this->helper->prepareGatewayRequest($orderId, true);
 
