@@ -5,6 +5,8 @@ namespace Twispay\Payments\Helper;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Framework\Exception\PaymentException;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\App\ObjectManager;
 
 /**
  * Helper class for everything that has to do with payment
@@ -47,7 +49,7 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \Twispay\Payments\Model\Config $config
      * @param \Twispay\Payments\Logger\Logger $twispayLogger
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
-     * @param \Magento\Sales\Model\Order $order
+     * @param \Magento\Sales\Api\OrderRepositoryInterface $orderRepository
      */
     public function __construct(
         \Magento\Framework\App\Helper\Context $context,
@@ -62,7 +64,7 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
         $this->storeManager = $storeManager;
         $this->orderRepository = $orderRepository;
 
-        $this->objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+        $this->objectManager = ObjectManager::getInstance();
     }
 
     public function getBackUrl()
@@ -86,8 +88,6 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
         // Get the API key from the cache to be used as an encryption key
         $apiKey = $this->config->getApiKey();
 
-        $this->log->debug($apiKey);
-
         // Sort the keys in the object alphabetically
         $this->recursiveKeySort($data);
 
@@ -103,7 +103,7 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
 
         $checksum = base64_encode($encoded);
 
-        $this->log->debug($checksum);
+        $this->log->debug("Checksum: " . $checksum);
 
         return $checksum;
     }
@@ -123,10 +123,90 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * Prepares the request data to be sent to the Twispay gateway
+     *
+     * @param $orderId
+     * @param $isGuestCustomer
+     *
+     * @return array $data
+     */
+    public function prepareGatewayRequest($orderId, $isGuestCustomer)
+    {
+        // Get the details of the last order
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = $this->orderRepository->get($orderId);
+
+        // Set the status of this order to pending payment
+        $order->setState(Order::STATE_PENDING_PAYMENT, true);
+        $order->setStatus(Order::STATE_PENDING_PAYMENT);
+        $order->addStatusToHistory($order->getStatus(), __('Redirecting to Twispay payment gateway'));
+        $order->save();
+
+        $address = $order->getBillingAddress();
+
+        $items = $units = $unitPrice = $subTotal = [];
+        foreach ($order->getAllVisibleItems() as $key => $item) {
+            $items[$key] = $item->getName();
+            $subTotal[$key] = (string)number_format((float)$item->getRowTotalInclTax(), 2, '.', '');
+            $unitPrice[$key] = (string)number_format((float)$item->getPriceInclTax(), 2, '.', '');
+            $units[$key] = (int)$item->getQtyOrdered();
+        }
+
+        // Add the shipping price
+        if ($order->getShippingAmount() > 0) {
+            $index             = count($items);
+            $items[$index]     = __('Shipping')->render();
+            $unitPrice[$index] = (string)number_format((float) $order->getShippingAmount(), 2, '.', '');
+            ;
+            $units[$index]     = "";
+            $subTotal[$index]  = (string)number_format((float) $order->getShippingAmount(), 2, '.', '');
+        }
+
+        $emptyStringArray = [];
+        $emptyStringArray[0] = "";
+
+        $data = [
+            'siteId' => (string)$this->config->getSiteId(),
+            'orderId' => (string)(int)$orderId,
+            'currency' => $order->getOrderCurrencyCode(),
+            'amount' => (string)number_format((float)$order->getGrandTotal(), 2, '.', ''),
+            'orderType' => $this->config->getOrderType(),
+            'cardTransactionMode' => $this->config->getCardTransactionMode(),
+            'firstName' => $address->getFirstname() != null ? $address->getFirstname() : '',
+            'lastName' => $address->getLastname() != null ? $address->getLastname() : '',
+            'city' => $address->getCity() != null ? $address->getCity() : '',
+            'state' => (
+                ($address->getCountryId() == 'US' && $address->getRegionCode() != null) ? $address->getRegionCode() : ''
+            ),
+            'country' => $address->getCountryId() != null ? $address->getCountryId() : '',
+            'zipCode' => (
+                $address->getPostcode() != null ? preg_replace("/[^0-9]/", '', $address->getPostcode()) : ''
+            ),
+            'address' => $address->getStreet() != null ? join(',', $address->getStreet()) : '',
+            'email' => $address->getEmail() != null ? $address->getEmail() : '',
+            'phone' => (
+                $address->getTelephone() != null ? preg_replace("/[^0-9\+]/", '', $address->getTelephone()) : ''
+            ),
+            'item' => $items,
+            'backUrl' => $this->getBackUrl(),
+            'unitPrice' => $unitPrice,
+            'units' => $units,
+            'subTotal' => $subTotal,
+            'identifier' => $isGuestCustomer ? $address->getEmail() : '_' . $address->getCustomerId()
+        ];
+
+        // Compute and add the checksum to the return array
+        $data['checksum'] = $this->computeChecksum($data);
+
+        return $data;
+    }
+
+    /**
      * This method computes the checksum on the given data array
      *
      * @param string $encrypted
      * @return array the decrypted response
+     * @throws LocalizedException
      */
     public function decryptResponse($encrypted)
     {
@@ -134,23 +214,27 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
         $apiKey = $this->config->getApiKey();
 
         $encrypted = (string)$encrypted;
-        if (!strlen($encrypted)) {
+        if ($encrypted == "") {
             return null;
         }
 
         if (strpos($encrypted, ',') !== false) {
             $encryptedParts = explode(',', $encrypted, 2);
+
+            // @codingStandardsIgnoreStart
             $iv = base64_decode($encryptedParts[0]);
             if (false === $iv) {
-                throw new \Exception("Invalid encryption iv");
+                throw new LocalizedException(__("Invalid encryption iv"));
             }
             $encrypted = base64_decode($encryptedParts[1]);
             if (false === $encrypted) {
-                throw new \Exception("Invalid encrypted data");
+                throw new LocalizedException(__("Invalid encrypted data"));
             }
+            // @codingStandardsIgnoreEnd
+
             $decrypted = openssl_decrypt($encrypted, 'AES-256-CBC', $apiKey, OPENSSL_RAW_DATA, $iv);
             if (false === $decrypted) {
-                throw new \Exception("Data could not be decrypted");
+                throw new LocalizedException(__("Data could not be decrypted"));
             }
 
             return $decrypted;
@@ -161,10 +245,9 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * This method receives as a parameter the response from the Twispay gateway
-     * and
+     * and creates the transaction record
      *
-     * @param $respose
-     *
+     * @param $response
      * @throws PaymentException
      */
     public function processGatewayResponse($response)
@@ -189,7 +272,7 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
         $payment = $order->getPayment();
         $paymentMethod = $payment->getMethodInstance();
 
-        if ($paymentMethod->getCode() !== 'twispay') {
+        if ($paymentMethod->getCode() !== \Twispay\Payments\Model\Twispay::METHOD_CODE) {
             $this->log->error('Unsupported payment method', [$paymentMethod->getCode()]);
             throw new PaymentException(__('Unsupported payment method'));
         }
@@ -217,7 +300,11 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
             $order->setStatus(Order::STATE_PROCESSING);
             $order->setExtCustomerId($response->customerId);
             $order->setExtOrderId($response->orderId);
-            $order->addStatusToHistory($order->getStatus(), __('Order paid successfully with reference #%1', $transactionId));
+            $order->addStatusToHistory(
+                $order->getStatus(),
+                __('Order paid successfully with reference #%1', $transactionId)
+            );
+
             $order->save();
         }
     }

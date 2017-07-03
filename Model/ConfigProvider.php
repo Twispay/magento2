@@ -8,7 +8,7 @@ class ConfigProvider implements ConfigProviderInterface
     /**
      * @var Config
      */
-    protected $config;
+    private $config;
 
     public function __construct(
         Config $config
@@ -23,9 +23,8 @@ class ConfigProvider implements ConfigProviderInterface
     {
         $outConfig = [
             'payment' => [
-                'twispay' => [
+                \Twispay\Payments\Model\Twispay::METHOD_CODE => [
                     'redirect_url' => $this->config->getRedirectUrl(),
-                    'back_url' => $this->config->getBackUrl()
                 ]
             ]
         ];

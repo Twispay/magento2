@@ -10,13 +10,14 @@ namespace Twispay\Payments\Service\V1\Data;
 
 use Twispay\Payments\Api\Data\country;
 use Twispay\Payments\Api\Data\OrderPaymentResponseInterface;
+use Magento\Framework\Api\AbstractExtensibleObject;
 
 /**
  * Class OrderPaymentResponse
  * @package Twispay\Payments\Service\V1\Data
  * @author Webliant Software
  */
-class OrderPaymentResponse extends \Magento\Framework\Api\AbstractExtensibleObject implements OrderPaymentResponseInterface
+class OrderPaymentResponse extends AbstractExtensibleObject implements OrderPaymentResponseInterface
 {
     /**
      * @return string

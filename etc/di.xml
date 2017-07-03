@@ -23,4 +23,10 @@
         </arguments>
     </type>
 
+    <type name="Magento\Checkout\Api\GuestPaymentInformationManagementInterface">
+        <plugin name="beforeSavePaymentInformationAndPlaceOrderGuest" type="Twispay\Payments\Plugin\GuestPaymentInformationManagement" />
+    </type>
+    <type name="Magento\Checkout\Api\PaymentInformationManagementInterface">
+        <plugin name="beforeSavePaymentInformationAndPlaceOrderGuest" type="Twispay\Payments\Plugin\PaymentInformationManagement" />
+    </type>
 </config>

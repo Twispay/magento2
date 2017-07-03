@@ -17,17 +17,7 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
      *
      * @var \Twispay\Payments\Service\V1\Data\OrderPaymentResponseFactory
      */
-    protected $responseFactory;
-
-    /**
-     * @var \Magento\Checkout\Model\Session
-     */
-    protected $checkoutSession;
-
-    /**
-     * @var \Magento\Customer\Model\Session
-     */
-    protected $customerSession;
+    private $responseFactory;
 
     /**
      * @var \Magento\Checkout\Helper\Data
@@ -54,7 +44,6 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
      *
      * @param \Twispay\Payments\Model\Config $config
      * @param \Twispay\Payments\Helper\Payment $helper
-     * @param \Magento\Customer\Model\Session $customerSession
      * @param \Magento\Checkout\Helper\Data $checkoutHelper
      * @param \Twispay\Payments\Logger\Logger $twispayLogger
      * @param \Twispay\Payments\Service\V1\Data\OrderPaymentResponseFactory $responseFactory
@@ -62,7 +51,6 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
     public function __construct(
         \Twispay\Payments\Model\Config $config,
         \Twispay\Payments\Helper\Payment $helper,
-        \Magento\Customer\Model\Session $customerSession,
         \Magento\Checkout\Helper\Data $checkoutHelper,
         \Twispay\Payments\Logger\Logger $twispayLogger,
         \Twispay\Payments\Service\V1\Data\OrderPaymentResponseFactory $responseFactory
@@ -70,84 +58,25 @@ class TwispayPaymentDetails implements TwispayPaymentDetailsInterface
         $this->config = $config;
         $this->helper = $helper;
         $this->checkoutHelper = $checkoutHelper;
-        $this->checkoutSession = $this->checkoutHelper->getCheckout();
-        $this->customerSession = $customerSession;
         $this->log = $twispayLogger;
         $this->responseFactory = $responseFactory;
     }
 
     /**
      * Generates the payment details for the given order
-     * @param $orderId
+     *
      * @return \Twispay\Payments\Service\V1\Data\OrderPaymentResponse
      */
-    public function getPaymentDetails($orderId)
+    public function getPaymentDetails()
     {
-        // Get the details of the last order
-        $order = $this->checkoutSession->getLastRealOrder();
-
-        //TODO check if the user is authenticated first
-        // Set the status of this order to pending payment
-        $order->setState(Order::STATE_PENDING_PAYMENT, true);
-        $order->setStatus(Order::STATE_PENDING_PAYMENT);
-        $order->addStatusToHistory($order->getStatus(), 'Redirecting to Twispay payment gateway');
-        $order->save();
-
-        $address = $order->getBillingAddress();
-
-        $items = [];
-        $units = [];
-        $unitPrice = [];
-        $subTotal = [];
-        foreach ($order->getAllVisibleItems() as $key => $item) {
-            $items[$key] = $item->getName();
-            $subTotal[$key] = strval(number_format((float)$item->getRowTotalInclTax(), 2, '.', ''));
-            $unitPrice[$key] = strval(number_format((float)$item->getPriceInclTax(), 2, '.', ''));
-            $units[$key] = (int)$item->getQtyOrdered();
-        }
-
-        // Add the shipping price
-        if ($order->getShippingAmount() > 0) {
-            $index             = count($items);
-            $items[$index]     = __('Shipping')->render();
-            $unitPrice[$index] = strval(number_format((float) $order->getShippingAmount(), 2, '.', ''));
-            ;
-            $units[$index]     = "";
-            $subTotal[$index]  = strval(number_format((float) $order->getShippingAmount(), 2, '.', ''));
-        }
-
-        $emptyStringArray = [];
-        $emptyStringArray[0] = "";
-
-        $data = [
-            'siteId' => strval($this->config->getSiteId()),
-            'orderId' => strval((int)$order->getId()),
-            'currency' => $order->getOrderCurrencyCode(),
-            'amount' => strval(number_format((float)$order->getGrandTotal(), 2, '.', '')),
-            'orderType' => $this->config->getOrderType(),
-            'cardTransactionMode' => $this->config->getCardTransactionMode(),
-            'firstName' => $address->getFirstname() != null ? $address->getFirstname() : '',
-            'lastName' => $address->getLastname() != null ? $address->getLastname() : '',
-            'city' => $address->getCity() != null ? $address->getCity() : '',
-            'state' => ($address->getCountryId() == 'US' && $address->getRegionCode() != null) ? $address->getRegionCode() : '',
-            'country' => $address->getCountryId() != null ? $address->getCountryId() : '',
-            'zipCode' => $address->getPostcode() != null ? preg_replace("/[^0-9]/", '', $address->getPostcode()) : '',
-            'address' => $address->getStreet() != null ? join(',', $address->getStreet()) : '',
-            'email' => $address->getEmail() != null ? $address->getEmail() : '',
-            'phone' => $address->getTelephone() != null ? preg_replace("/[^0-9\+]/", '', $address->getTelephone()) : '',
-            'item' => $items,
-            'backUrl' => $this->helper->getBackUrl(),
-            'unitPrice' => $unitPrice,
-            'units' => $units,
-            'subTotal' => $subTotal,
-            'identifier' => '_' . $this->customerSession->getCustomerId()
-        ];
+        $this->log->debug(print_r($this->checkoutHelper->getCheckout()->toArray(), true));
+        $data = $this->checkoutHelper->getCheckout()->getTwispayDaya();
 
         $oResponse = $this->responseFactory->create();
         foreach ($data as $key => $value) {
             $oResponse->setData($key, $value);
         }
-        $oResponse->setData('checksum', $this->helper->computeChecksum($data));
+
         $oResponse->setData('success', true);
 
         return $oResponse;

@@ -55,56 +55,15 @@ define(
                                 self.isPlaceOrderActionAllowed(true);
                             }
                         ).done(
-                            function (orderId) {
-                            self.afterPlaceOrder(orderId);
-
+                            function (response) {
+                                var data = JSON.parse(response);
+                                self.redirectToGateway(data);
                             }
                         );
 
                     return true;
                 }
 
-                return false;
-            },
-
-            /**
-             * After the order is placed we must redirect to Twispay to do the payment
-             */
-            afterPlaceOrder: function (orderId) {
-                var serviceUrl, payload;
-                var self = this;
-
-                payload = {
-                    order_id: orderId
-                };
-
-                if (customer.isLoggedIn()) {
-                    serviceUrl = urlBuilder.createUrl('/carts/mine/retrieve-twispay-payment-details', {});
-                } else {
-                    serviceUrl = urlBuilder.createUrl('/guest-carts/:quoteId/retrieve-twispay-payment-details', {
-                        quoteId: quote.getQuoteId()
-                    });
-                    payload.email = quote.guestEmail;
-                }
-
-                fullScreenLoader.startLoader();
-
-                storage.post(
-                    serviceUrl,
-                    JSON.stringify(payload)
-                ).fail(
-                    function (response) {
-                        errorProcessor.process(response, messageContainer);
-                    }
-                ).done(
-                    function (response) {
-                        self.redirectToGateway(response);
-                    }
-                ).always(
-                    function () {
-                        fullScreenLoader.stopLoader();
-                    }
-                );
                 return false;
             },
 
@@ -121,7 +80,7 @@ define(
 
                 var snakeToCamel = function (s) {
                     return s.replace(/(\_\w)/g, function (m) {
-    return m[1].toUpperCase();});
+                        return m[1].toUpperCase();});
                 };
 
                 for (var key in params) {

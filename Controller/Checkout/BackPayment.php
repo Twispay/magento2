@@ -3,11 +3,6 @@
 namespace Twispay\Payments\Controller\Checkout;
 
 use Magento\Framework\App\Action\Action;
-use Magento\Quote\Api\CartManagementInterface;
-use Magento\Quote\Model\QuoteIdMaskFactory;
-use Magento\Quote\Api\CartRepositoryInterface;
-use Magento\Framework\Webapi\ServiceInputProcessor;
-use Magento\Sales\Model\OrderFactory;
 use Magento\Framework\Exception\PaymentException;
 
 /**
@@ -17,30 +12,6 @@ use Magento\Framework\Exception\PaymentException;
  */
 class BackPayment extends Action
 {
-    /**
-     * @var CartManagementInterface
-     */
-    private $quoteManagement;
-
-    /**
-     * @var QuoteIdMaskFactory
-     */
-    private $quoteIdMaskFactory;
-
-    /**
-     * @var CartRepositoryInterface
-     */
-    private $cartRepository;
-
-    /**
-     * @var ServiceInputProcessor
-     */
-    private $inputProcessor;
-
-    /**
-     * @var \Magento\Sales\Model\OrderFactory
-     */
-    private $orderFactory;
 
     /**
      * @var \Twispay\Payments\Model\Config
@@ -64,24 +35,12 @@ class BackPayment extends Action
      * @param \Twispay\Payments\Logger\Logger $twispayLogger
      * @param \Twispay\Payments\Model\Config $config
      * @param \Twispay\Payments\Helper\Payment $helper
-     * @param CartManagementInterface $quoteManagement
-     * @param QuoteIdMaskFactory $quoteIdMaskFactory
-     * @param CartRepositoryInterface $cartRepository
-     * @param \Magento\Customer\Model\Session $customerSession
-     * @param \Magento\Checkout\Model\Session $checkoutSession
-     * @param ServiceInputProcessor $inputProcessor
-     * @param OrderFactory $orderFactory
      */
     public function __construct(
         \Magento\Framework\App\Action\Context $context,
         \Twispay\Payments\Logger\Logger $twispayLogger,
         \Twispay\Payments\Model\Config $config,
-        \Twispay\Payments\Helper\Payment $helper,
-        CartManagementInterface $quoteManagement,
-        QuoteIdMaskFactory $quoteIdMaskFactory,
-        CartRepositoryInterface $cartRepository,
-        ServiceInputProcessor $inputProcessor,
-        OrderFactory $orderFactory
+        \Twispay\Payments\Helper\Payment $helper
     ) {
 
         parent::__construct($context);
@@ -89,11 +48,6 @@ class BackPayment extends Action
         $this->log = $twispayLogger;
         $this->config = $config;
         $this->helper = $helper;
-        $this->quoteManagement = $quoteManagement;
-        $this->quoteIdMaskFactory = $quoteIdMaskFactory;
-        $this->cartRepository = $cartRepository;
-        $this->inputProcessor = $inputProcessor;
-        $this->orderFactory = $orderFactory;
     }
 
     /**
@@ -103,9 +57,9 @@ class BackPayment extends Action
      */
     public function execute()
     {
-
         $response = $this->getRequest()->getParams();
-        $this->log->debug(print_r($response, true));
+
+        $this->log->debug(var_export($response, true));
 
         $result = null;
         if (array_key_exists('opensslResult', $response)) {
@@ -115,7 +69,7 @@ class BackPayment extends Action
                 if ($result != null) {
                     $result = json_decode($result);
 
-                    $this->log->debug(print_r($result, true));
+                    $this->log->debug(var_export($result, true));
                 } else {
                     $this->log->error("Decoded response is NULL");
                 }

@@ -6,13 +6,13 @@ class Config
     /**
      * @var \Magento\Framework\App\Config\ScopeConfigInterface
      */
-    protected $_scopeConfigInterface;
+    private $scopeConfigInterface;
 
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $configInterface
     ) {
-    
-        $this->_scopeConfigInterface = $configInterface;
+
+        $this->scopeConfigInterface = $configInterface;
     }
 
     public function getApiKey()
@@ -70,6 +70,6 @@ class Config
 
     private function getConfigValue($value)
     {
-        return $this->_scopeConfigInterface->getValue('payment/twispay/' . $value);
+        return $this->scopeConfigInterface->getValue('payment/twispay/' . $value);
     }
 }

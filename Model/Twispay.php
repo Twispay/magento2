@@ -10,6 +10,7 @@ use Magento\Framework\Exception\PaymentException;
  * @category    Twispay
  * @package     Twispay_Payments
  * @author      Webliant Software
+ * @codingStandardsIgnoreFile
  */
 class Twispay extends \Magento\Payment\Model\Method\AbstractMethod
 {
@@ -104,7 +105,7 @@ class Twispay extends \Magento\Payment\Model\Method\AbstractMethod
     }
 
     /**
-     * This method will prepare the post data for the twispay gateway request
+     * This method will prepare the post data for the Twispay gateway request
      * and store them on the checkout session
      *
      * @param string $paymentAction
@@ -121,7 +122,7 @@ class Twispay extends \Magento\Payment\Model\Method\AbstractMethod
 
         /** @var \Magento\Sales\Model\Order $order */
         $order = $payment->getOrder();
-//		$order->setCanSendNewEmailFlag(false);
+		$order->setCanSendNewEmailFlag(false);
 
         // Set Initial Order Status
         $state = \Magento\Sales\Model\Order::STATE_NEW;
@@ -135,7 +136,5 @@ class Twispay extends \Magento\Payment\Model\Method\AbstractMethod
             $this->log->error('Order could not be loaded');
             throw new PaymentException(__('Order could not be loaded'));
         }
-
-        $this->log->info($orderId);
     }
 }

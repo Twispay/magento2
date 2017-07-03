@@ -15,12 +15,12 @@ class PaymentTest extends \PHPUnit_Framework_TestCase
     /**
      * @var \Magento\Store\Model\StoreManagerInterface
      */
-    protected $storeManagerMock;
+    private $storeManagerMock;
 
     /**
      * @var \Twispay\Payments\Logger\Logger
      */
-    protected $logMock;
+    private $logMock;
 
     /**
      * @var \Twispay\Payments\Model\Config
@@ -35,7 +35,7 @@ class PaymentTest extends \PHPUnit_Framework_TestCase
     /**
      * @var ObjectManagerHelper
      */
-    protected $objectManagerHelper;
+    private $objectManagerHelper;
 
     /**
      * test setup
@@ -121,6 +121,9 @@ class PaymentTest extends \PHPUnit_Framework_TestCase
             'zipCode' => '49628123'
         ];
 
-        $this->assertEquals('AguFd+K3Vn9rs315E0PWEHN9DooLtxl3STaXt/9IQKbmZj/+Id9GiGKIxSdqXdg+9RYGwxFH3ZIgs45Gf7P6kA==', $this->helper->computeChecksum($data));
+        $this->assertEquals(
+            'AguFd+K3Vn9rs315E0PWEHN9DooLtxl3STaXt/9IQKbmZj/+Id9GiGKIxSdqXdg+9RYGwxFH3ZIgs45Gf7P6kA==',
+            $this->helper->computeChecksum($data)
+        );
     }
 }
