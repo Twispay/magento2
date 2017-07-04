@@ -11,6 +11,7 @@ use Magento\Framework\Controller\ResultFactory;
  * This controller handles the server to server notification
  *
  * @package Twispay\Payments\Controller\Checkout
+ * @codingStandardsIgnoreFile
  */
 class Notification extends Action
 {
