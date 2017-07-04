@@ -48,6 +48,8 @@ class BackPayment extends Action
         $this->log = $twispayLogger;
         $this->config = $config;
         $this->helper = $helper;
+
+
     }
 
     /**
@@ -87,6 +89,10 @@ class BackPayment extends Action
                 $this->messageManager->addSuccessMessage($message);
 
                 $successPage = $this->config->getSuccessPage();
+                if ($successPage == '') {
+                    $successPage = 'checkout/onepage/success';
+                }
+
                 $this->log->debug("Redirecting:" . $successPage);
                 $this->_redirect($successPage);
             } catch (PaymentException $e) {
