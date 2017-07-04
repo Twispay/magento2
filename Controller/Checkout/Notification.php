@@ -5,21 +5,14 @@ namespace Twispay\Payments\Controller\Checkout;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\Exception\PaymentException;
 use Magento\Quote\Model\QuoteIdMaskFactory;
-use Magento\Framework\Controller\ResultFactory;
 
 /**
  * This controller handles the server to server notification
  *
  * @package Twispay\Payments\Controller\Checkout
- * @codingStandardsIgnoreFile
  */
 class Notification extends Action
 {
-    /**
-     * @var ResultFactory
-     */
-    protected $resultFactory;
-
     /**
      * @var \Twispay\Payments\Logger\Logger
      */
@@ -34,18 +27,15 @@ class Notification extends Action
      * Constructor
      *
      * @param \Magento\Framework\App\Action\Context $context
-     * @param ResultFactory $resultFactory
      * @param \Twispay\Payments\Logger\Logger $twispayLogger
      * @param \Twispay\Payments\Helper\Payment $helper
      */
     public function __construct(
         \Magento\Framework\App\Action\Context $context,
-        ResultFactory $resultFactory,
         \Twispay\Payments\Logger\Logger $twispayLogger,
         \Twispay\Payments\Helper\Payment $helper
     ) {
 
-        $this->resultFactory = $resultFactory;
         $this->log = $twispayLogger;
         $this->helper = $helper;
 
