@@ -9,46 +9,46 @@
  */
 -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="1column" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
-    <head>
-        <css src="Twispay_Payments::css/twispay.css"/>
-    </head>
-    <body>
-        <referenceBlock name="checkout.root">
-            <arguments>
-                <argument name="jsLayout" xsi:type="array">
-                    <item name="components" xsi:type="array">
-                        <item name="checkout" xsi:type="array">
-                            <item name="children" xsi:type="array">
-                                <item name="steps" xsi:type="array">
-                                    <item name="children" xsi:type="array">
-                                        <item name="billing-step" xsi:type="array">
-                                            <item name="component" xsi:type="string">uiComponent</item>
-                                            <item name="children" xsi:type="array">
-                                                <item name="payment" xsi:type="array">
-                                                    <item name="children" xsi:type="array">
-                                                        <item name="renders" xsi:type="array">
-                                                            <item name="children" xsi:type="array">
-                                                                <item name="twispay-payments" xsi:type="array">
-                                                                    <item name="component" xsi:type="string">Twispay_Payments/js/view/payment/twispay</item>
-                                                                    <item name="methods" xsi:type="array">
-                                                                        <item name="twispay" xsi:type="array">
-                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
-                                                                        </item>
-                                                                    </item>
-                                                                </item>
-                                                            </item>
-                                                        </item>
-                                                    </item>
-                                                </item>
-                                            </item>
-                                        </item>
+  <head>
+    <css src="Twispay_Payments::css/twispay.css"/>
+  </head>
+  <body>
+    <referenceBlock name="checkout.root">
+      <arguments>
+        <argument name="jsLayout" xsi:type="array">
+          <item name="components" xsi:type="array">
+            <item name="checkout" xsi:type="array">
+              <item name="children" xsi:type="array">
+                <item name="steps" xsi:type="array">
+                  <item name="children" xsi:type="array">
+                    <item name="billing-step" xsi:type="array">
+                      <item name="component" xsi:type="string">uiComponent</item>
+                      <item name="children" xsi:type="array">
+                        <item name="payment" xsi:type="array">
+                          <item name="children" xsi:type="array">
+                            <item name="renders" xsi:type="array">
+                              <item name="children" xsi:type="array">
+                                <item name="twispay-payments" xsi:type="array">
+                                  <item name="component" xsi:type="string">Twispay_Payments/js/view/payment/twispay</item>
+                                  <item name="methods" xsi:type="array">
+                                    <item name="twispay" xsi:type="array">
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                     </item>
+                                  </item>
                                 </item>
+                              </item>
                             </item>
+                          </item>
                         </item>
+                      </item>
                     </item>
-                </argument>
-            </arguments>
-        </referenceBlock>
-    </body>
+                  </item>
+                </item>
+              </item>
+            </item>
+          </item>
+        </argument>
+      </arguments>
+    </referenceBlock>
+  </body>
 </page>

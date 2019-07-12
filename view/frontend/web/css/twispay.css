@@ -1,35 +1,34 @@
 
 .payment-method.twispay .brands {
-    display: inline;
-    margin-left: 20px;
+  display: inline;
+  margin-left: 20px;
 }
 
 .payment-method.twispay .brands.brandVisa {
-    padding: 0px 25px;
-    background: no-repeat url('../images/visa.png');
+  padding: 0px 25px;
+  background: no-repeat url('../images/visa.png');
 }
 
 .payment-method.twispay .brands.brandMastercard {
-    padding: 5px 20px;
-    background: no-repeat url('../images/mastercard.png');
+  padding: 5px 20px;
+  background: no-repeat url('../images/mastercard.png');
 }
 
 .payment-method.twispay .twispay-logo {
-    float:right;
-    height: 24px;
-    max-height: none;
-    vertical-align: middle;
-    padding: 15px 0px;
+  float:right;
+  height: 24px;
+  max-height: none;
+  vertical-align: middle;
+  padding: 15px 0px;
 }
 
 .payment-method.twispay .secured-seal {
-    background: no-repeat url('../images/lock.png');
-    background-position-y: 2px;
-    background-size: 22px 20px;
-    border: 1px solid #DDD;
-    padding: 3px 5px 3px 24px;
-    border-radius: 3px;
-    float: right;
-    margin: 15px 30px;
+  background: no-repeat url('../images/lock.png');
+  background-position-y: 2px;
+  background-size: 22px 20px;
+  border: 1px solid #DDD;
+  padding: 3px 5px 3px 24px;
+  border-radius: 3px;
+  float: right;
+  margin: 15px 30px;
 }
-

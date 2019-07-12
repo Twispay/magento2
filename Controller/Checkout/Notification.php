@@ -57,7 +57,7 @@ class Notification extends Action
         $result = null;
         if (array_key_exists('opensslResult', $response)) {
             try {
-                $result = $this->helper->decryptResponse($response['opensslResult']);
+                $result = $this->helper->twispay_tw_decrypt_message($response['opensslResult']);
 
                 if ($result != null) {
                     $result = json_decode($result);

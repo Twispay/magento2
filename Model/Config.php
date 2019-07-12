@@ -1,75 +1,66 @@
 <?php
 namespace Twispay\Payments\Model;
 
-class Config
-{
-    /**
-     * @var \Magento\Framework\App\Config\ScopeConfigInterface
-     */
-    private $scopeConfigInterface;
+class Config{
+  /**
+   * @var \Magento\Framework\App\Config\ScopeConfigInterface
+   */
+  private $scopeConfigInterface;
 
-    public function __construct(
-        \Magento\Framework\App\Config\ScopeConfigInterface $configInterface
-    ) {
 
-        $this->scopeConfigInterface = $configInterface;
+  public function __construct(\Magento\Framework\App\Config\ScopeConfigInterface $configInterface) {
+    $this->scopeConfigInterface = $configInterface;
+  }
+
+
+  public function getPrivateKey(){
+    if ($this->liveMode()) {
+      return $this->getConfigValue('live_private_key');
+    } else {
+      return $this->getConfigValue('staging_private_key');
     }
+  }
 
-    public function getApiKey()
-    {
-        if ($this->isDebugMode()) {
-            return $this->getConfigValue('test_api_key');
-        } else {
-            return $this->getConfigValue('live_api_key');
-        }
-    }
 
-    public function getSiteId()
-    {
-        return $this->getConfigValue('site_id');
+  public function getSiteId(){
+    if ($this->liveMode()) {
+      return $this->getConfigValue('live_site_id');
+    } else {
+      return $this->getConfigValue('staging_site_id');
     }
+  }
 
-    public function isDebugMode()
-    {
-        return !!$this->getConfigValue('debug');
-    }
 
-    public function getRedirectUrl()
-    {
-        if ($this->isDebugMode()) {
-            return $this->getConfigValue('test_redirect_url');
-        } else {
-            return $this->getConfigValue('live_redirect_url');
-        }
-    }
+  public function liveMode(){
+    return $this->getConfigValue('live_mode');
+  }
 
-    public function getBackUrl()
-    {
-        return $this->getConfigValue('back_url');
-    }
 
-    public function getSuccessPage()
-    {
-        return $this->getConfigValue('success_page');
+  public function getRedirectUrl(){
+    if ($this->liveMode()) {
+      return $this->getConfigValue('live_redirect_url');
+    } else {
+      return $this->getConfigValue('staging_redirect_url');
     }
+  }
 
-    public function getOrderType()
-    {
-        return $this->getConfigValue('order_type');
-    }
 
-    public function getCardTransactionMode()
-    {
-        return $this->getConfigValue('card_transaction_mode');
-    }
+  public function getBackUrl(){
+    return trim($this->getConfigValue('back_url'));
+  }
 
-    public function isEmailInvoice()
-    {
-        return !!$this->getConfigValue('email_invoice');
-    }
 
-    private function getConfigValue($value)
-    {
-        return $this->scopeConfigInterface->getValue('payment/twispay/' . $value);
-    }
+  public function getSuccessPage(){
+    return $this->getConfigValue('success_page');
+  }
+
+
+  public function emailInvoice(){
+    return $this->getConfigValue('email_invoice');
+  }
+
+
+  private function getConfigValue($value){
+    return $this->scopeConfigInterface->getValue('payment/twispay/' . $value);
+  }
 }

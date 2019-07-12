@@ -7,7 +7,4 @@ namespace Twispay\Payments\Logger;
  * @author Webliant Software
  * @codingStandardsIgnoreFile
  */
-class Logger extends \Monolog\Logger
-{
-    //
-}
+class Logger extends \Monolog\Logger {}
