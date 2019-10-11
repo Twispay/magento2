@@ -37,14 +37,15 @@ class PaymentInformationManagement {
                                                            , \Magento\Quote\Api\Data\PaymentInterface $paymentMethod
                                                            , \Magento\Quote\Api\Data\AddressInterface $billingAddress)
   {
-      $paymentDetails = $subject->getPaymentInformation($cartId);
-      $orderId = $proceed($cartId, $paymentMethod, $billingAddress);
-      /* Create the payment gateway request */
-      $data = $this->helper->createRequest($orderId, /*isGuest*/TRUE);
+    /* Execute the normal Magento 2 method and save the order ID. */
+    $orderId = $proceed($cartId, $paymentMethod, $billingAddress);
 
-      $this->log->debug("Intercepted order ID: " . $orderId);
+    $this->log->info(__FUNCTION__ . __(" Processing order #%1", $orderId));
 
-      /* Return the twispay request content. */
-      return json_encode($data);
+    /* Create the payment gateway JSON request. */
+    $data = $this->helper->createPurchaseRequest($orderId, /*isGuest*/FALSE);
+
+    /* Return the payment JSON gateway request. */
+    return json_encode($data);
   }
 }

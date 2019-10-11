@@ -33,20 +33,21 @@ class GuestPaymentInformationManagement {
    * @return string JSON encoded payment details
    */
   public function aroundSavePaymentInformationAndPlaceOrder( \Magento\Checkout\Model\GuestPaymentInformationManagement $subject
-                                                            , \Closure $proceed
-                                                            , $cartId
-                                                            , $email
-                                                            , \Magento\Quote\Api\Data\PaymentInterface $paymentMethod
-                                                            , \Magento\Quote\Api\Data\AddressInterface $billingAddress)
+                                                           , \Closure $proceed
+                                                           , $cartId
+                                                           , $email
+                                                           , \Magento\Quote\Api\Data\PaymentInterface $paymentMethod
+                                                           , \Magento\Quote\Api\Data\AddressInterface $billingAddress)
   {
-    $paymentDetails = $subject->getPaymentInformation($cartId);
+    /* Execute the normal Magento 2 method and save the order ID. */
     $orderId = $proceed($cartId, $email, $paymentMethod, $billingAddress);
-    /* Create the payment gateway request */
-    $data = $this->helper->createRequest($orderId, /*isGuest*/TRUE);
 
-    $this->log->debug("Intercepted order ID: " . $orderId);
+    $this->log->info(__FUNCTION__ . __(" Processing order #%1", $orderId));
 
-    /* Return the twispay request content. */
+    /* Create the payment gateway JSON request. */
+    $data = $this->helper->createPurchaseRequest($orderId, /*isGuest*/TRUE);
+
+    /* Return the payment JSON gateway request. */
     return json_encode($data);
   }
 }
