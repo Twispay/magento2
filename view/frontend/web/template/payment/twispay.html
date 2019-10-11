@@ -11,7 +11,7 @@
   <div class="payment-method-title field choice">
     <input type="radio" name="payment[method]" class="radio" data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()"/>
     <label data-bind="attr: {'for': getCode()}" class="label">
-      <span data-bind="text: $t('Pay by debit or credit card')"></span>
+      <span data-bind="text: $t(' Pay by debit or credit card')"></span>
       <div class="brands brandVisa"></div>
       <div class="brands brandMastercard"></div>
     </label>
@@ -41,7 +41,7 @@
           <span data-bind="i18n: 'Place Order'"></span>
         </button>
       </div>
-      <span class="secured-seal" data-bind="text: $t('Secured')"></span>
+      <span class="secured-seal" data-bind="text: $t(' Secured')"></span>
       <img class="twispay-logo" src="https://www.twispay.com/hubfs/twispay-images/twispay.svg">
     </div>
   </div>
