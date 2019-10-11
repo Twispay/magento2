@@ -50,7 +50,7 @@
 
         <field id="s_t_s_notification" translate="label" type="label" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
           <label>Server-to-server notification URL</label>
-          <comment><![CDATA[You must copy this <a href="/tpay/payment/server/">link</a> and add it in your merchant account with the Twispay Payment Gateway.]]></comment>
+          <comment><![CDATA[You must copy this <a href="/twispay/payment/ipn/">link</a> and add it in your merchant account within the Twispay platform.]]></comment>
         </field>
         <field id="success_page" translate="label" type="text" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Succes page key</label>

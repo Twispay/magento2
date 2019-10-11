@@ -16,17 +16,16 @@
         <active>1</active>
         <title>Twispay</title>
         <model>Twispay\Payments\Model\Twispay</model>
+        <order_status>pending_payment</order_status>
+        <payment_action>authorize_capture</payment_action>
         <live_mode>0</live_mode>
         <live_site_id/>
         <live_private_key/>
-        <live_redirect_url>https://secure.twispay.com</live_redirect_url>
         <staging_site_id/>
         <staging_private_key/>
-        <staging_redirect_url>https://secure-stage.twispay.com</staging_redirect_url>
         <success_page/>
         <contact_email/>
         <email_invoice>0</email_invoice>
-        <back_url>twispay/checkout/backpayment</back_url>
       </twispay>
     </payment>
   </default>
