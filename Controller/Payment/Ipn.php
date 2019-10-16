@@ -93,7 +93,7 @@ class Ipn extends Action {
 
     if(TRUE !== $orderValidation) {
       /* Extract the message. */
-      $message = _(' Failed to validate the response');
+      $message = __(' Failed to validate the response');
       /* Log the error. */
       $this->log->error($message);
       $_response->setContents($message);
@@ -104,7 +104,7 @@ class Ipn extends Action {
     $order = $this->helper->getOrder($decrypted['externalOrderId']);
     if (NULL === $order) {
       /* Extract the message. */
-      $message = _(' Order doesn\'t exists in store');
+      $message = __(' Order doesn\'t exists in store');
       /* Log the error. */
       $this->log->error($message);
       $_response->setContents($message);
@@ -117,7 +117,7 @@ class Ipn extends Action {
     /* Check status update result. */
     if (TRUE == $statusUpdate) {
       /* Check if a transaction with the same ID exists. */
-      $transactions = $this->helper->getOrderTransactions($order->getId());
+      $transactions = $this->helper->getTransactions($order->getId());
 
       /* Check if the transaction has already been registered. */
       $skipTransactionAdd = FALSE;
@@ -133,7 +133,7 @@ class Ipn extends Action {
         $this->helper->addOrderTransaction($order, /*serverResponse*/$decrypted);
 
         /* Link transaction to existing invoice. */
-        $this->helper->generateInvoice($order, $decrypted['transactionId']);
+        $this->helper->addPurchaseInvoice($order, $decrypted['transactionId']);
       }
     }
 

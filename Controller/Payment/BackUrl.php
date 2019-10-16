@@ -11,12 +11,14 @@ use Magento\Framework\Exception\PaymentException;
  * @package Twispay\Payments\Controller\Checkout
  */
 class BackUrl extends Action {
-  /** @var \Twispay\Payments\Model\Config */
-  private $config;
   /** @var \Twispay\Payments\Logger\Logger */
   private $log;
+  /** @var \Twispay\Payments\Model\Config */
+  private $config;
   /** @var \Twispay\Payments\Helper\Payment */
   private $helper;
+  /** @var \Magento\Framework\Message\ManagerInterface */
+  protected $messageManager;
 
 
   /**
@@ -27,16 +29,18 @@ class BackUrl extends Action {
    * @param \Twispay\Payments\Model\Config $config
    * @param \Twispay\Payments\Helper\Payment $helper
    */
-  public function __construct( \Magento\Framework\App\Action\Context $context
-                             , \Twispay\Payments\Logger\Logger $twispayLogger
+  public function __construct( \Twispay\Payments\Logger\Logger $twispayLogger
                              , \Twispay\Payments\Model\Config $config
-                             , \Twispay\Payments\Helper\Payment $helper)
+                             , \Twispay\Payments\Helper\Payment $helper
+                             , \Magento\Framework\Message\ManagerInterface $messageManager
+                             , \Magento\Framework\App\Action\Context $context)
   {
     parent::__construct($context);
 
     $this->log = $twispayLogger;
     $this->config = $config;
     $this->helper = $helper;
+    $this->messageManager = $messageManager;
   }
 
 
@@ -91,7 +95,7 @@ class BackUrl extends Action {
 
     if(FALSE == $orderValidation){
       /* Extract the message. */
-      $message = _(' Failed to validate the response');
+      $message = __(' Failed to validate the response');
       /* Log the error. */
       $this->log->error(__FUNCTION__ . $message);
       $this->messageManager->addErrorMessage(__FUNCTION__ . $message);
@@ -103,7 +107,7 @@ class BackUrl extends Action {
     $order = $this->helper->getOrder($decrypted['externalOrderId']);
     if (NULL === $order) {
       /* Extract the message. */
-      $message = _(' Order doesn\'t exists in store');
+      $message = __(' Order doesn\'t exists in store');
       /* Log the error. */
       $this->log->error($message);
       $_response->setContents($message);
@@ -116,7 +120,7 @@ class BackUrl extends Action {
     /* Check status update result. */
     if (TRUE == $statusUpdate) {
       /* Check if a transaction with the same ID exists. */
-      $transactions = $this->helper->getOrderTransactions($order->getId());
+      $transactions = $this->helper->getTransactions($order->getId());
 
       /* Check if the transaction has already been registered. */
       $skipTransactionAdd = FALSE;
@@ -128,11 +132,12 @@ class BackUrl extends Action {
       }
 
       if (FALSE == $skipTransactionAdd) {
+        $this->log->info(__FUNCTION__ . ': Add order transaction and invoice.');
         /* Save the payment transaction. */
         $this->helper->addOrderTransaction($order, /*serverResponse*/$decrypted);
 
         /* Link transaction to existing invoice. */
-        $this->helper->generateInvoice($order, $decrypted['transactionId']);
+        $this->helper->addPurchaseInvoice($order, $decrypted['transactionId']);
       }
 
       $successPage = $this->config->getSuccessPage();
