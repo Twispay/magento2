@@ -17,13 +17,24 @@ class Twispay extends \Magento\Payment\Model\Method\AbstractMethod {
 
   /** @var \Twispay\Payments\Logger\Logger */
   private $log;
+  /** @var \Magento\Framework\UrlInterface */
+    protected $_urlBuilder;
   /** @var String */
   private $apiKey;
 
-  /** @var string: Payment code */
   protected $_code = self::METHOD_CODE;
-  /** @var bool: Payment Method feature */
-  protected $_isInitializeNeeded = true;
+  protected $_isGateway = true;
+  protected $_canAuthorize = true;
+  protected $_canCapture = true;
+  protected $_canCapturePartial = true;
+  protected $_canRefund = true;
+  protected $_canRefundInvoicePartial = true;
+  protected $_canVoid = false;
+  protected $_canUseInternal = true;
+  protected $_canUseCheckout = true;
+  protected $_canFetchTransactionInfo = true;
+  protected $_isInitializeNeeded = false;
+  protected $_isOffline = false;
 
 
   /**
@@ -68,12 +79,9 @@ class Twispay extends \Magento\Payment\Model\Method\AbstractMethod {
     parent::__construct($context, $registry, $extensionFactory, $customAttributeFactory, $paymentData, $scopeConfig, $logger, $resource, $resourceCollection, $data);
     /* Initialize the logger. */
     $this->log = $twispayLogger;
+    $this->_urlBuilder = $urlBuilder;
 
-    if ($this->getConfigValue('live_mode')) {
-      $this->apikey = $this->getConfigValue('live_private_key');
-    } else {
-      $this->apikey = $this->getConfigValue('staging_private_key');
-    }
+    $this->apikey = $this->getApiKey();
   }
 
 
@@ -94,19 +102,62 @@ class Twispay extends \Magento\Payment\Model\Method\AbstractMethod {
 
     /** @var \Magento\Sales\Model\Order $order */
     $order = $payment->getOrder();
+    if (empty($order) || !$order->getIncrementId()) {
+      $this->log->error(__(' Order could not be loaded'));
+      throw new PaymentException(__(' Order could not be loaded'));
+    }
+    /* Disable new order email. */
     $order->setCanSendNewEmailFlag(false);
 
-    /* Set Initial Order Status */
-    $state = \Magento\Sales\Model\Order::STATE_NEW;
-    $stateObject->setState($state);
-    $stateObject->setStatus($state);
+    /* Set initial order state and status. */
+    $stateObject->setState(\Magento\Sales\Model\Order::STATE_NEW);
+    $stateObject->setStatus(\Magento\Sales\Model\Order::STATE_NEW);
     $stateObject->setIsNotified(false);
+  }
 
-    $orderId = $order->getIncrementId();
 
-    if (empty($order) || !$orderId) {
-      $this->log->error(__('Order could not be loaded'));
-      throw new PaymentException(__('Order could not be loaded'));
-    }
+  /**
+   * Function that is called when the config 'Payment Action'
+   *  option is set to "Authorize Only" and will automatically
+   *  authorize all the received orders.
+   *
+   * Background operations:
+   *   - order with status PROCESSING is created;
+   *   - transaction is registered into magento with the transaction id;
+   *   - order comment is added automatically for authorization;
+   *
+   */
+  public function authorize(\Magento\Payment\Model\InfoInterface $payment, $amount) {
+    $this->log->info(__FUNCTION__ . __(' Authorize payment'));
+    return $this;
+  }
+
+
+  /**
+   * Function that is called when the config 'Payment Action'
+   *  option is set to "Authorize and Capture" and will automatically
+   *  authorize and capture all the received orders.
+   *
+   * Background operations:
+   *   - order with status PROCESSING is created;
+   *   - transaction is registered into magento with the transaction id;
+   *   - order comment is added automatically for authorization;
+   *   - invoice is created with status PAID;
+   *
+   */
+  public function capture(\Magento\Payment\Model\InfoInterface $payment, $amount) {
+    $this->log->info(__FUNCTION__ . __(' Authorize and capture payment'));
+    return $this;
+  }
+
+
+  /**
+   * Function that is called when a refund is done to refund
+   *  specified amount for payment.
+   *
+   */
+  public function refund(\Magento\Payment\Model\InfoInterface $payment, $amount) {
+    $this->log->info(__FUNCTION__ . __(' Refund payment'));
+    return $this;
   }
 }
