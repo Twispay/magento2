@@ -5,7 +5,7 @@
  *
  * @category    Twispay
  * @package     Twispay_Payments
- * @author      Webliant Software
+ * @author      Twispay
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../lib/internal/Magento/Framework/Module/etc/module.xsd">

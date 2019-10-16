@@ -8,9 +8,9 @@ use Magento\Sales\Model\Order\Payment\Transaction;
 /**
  * Twispay payment method model
  *
- * @category    Twispay
+ * @category    Twispay\Payments\Model
  * @package     Twispay_Payments
- * @author      Webliant Software
+ * @author      Twispay
  * @codingStandardsIgnoreFile
  */
 class Twispay extends \Magento\Payment\Model\Method\AbstractMethod {
@@ -218,6 +218,7 @@ class Twispay extends \Magento\Payment\Model\Method\AbstractMethod {
    * Parent transaction id getter
    *
    * @param \Magento\Payment\Model\InfoInterface $payment
+   *
    * @return string
    */
   protected function _getParentTransactionId(\Magento\Payment\Model\InfoInterface $payment) {

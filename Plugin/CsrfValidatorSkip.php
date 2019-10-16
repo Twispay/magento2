@@ -1,6 +1,13 @@
 <?php
 namespace Twispay\Payments\Plugin;
 
+/**
+ * Twispay payment method  CSRF validator
+ *
+ * @category    Twispay\Payments\Plugin
+ * @package     Twispay_Payments
+ * @author      Twispay
+ */
 class CsrfValidatorSkip {
   /**
    * @param \Magento\Framework\App\Request\CsrfValidator $subject

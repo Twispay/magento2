@@ -9,6 +9,7 @@ use Magento\Framework\Exception\PaymentException;
  * This controller handles the payment back URL
  *
  * @package Twispay\Payments\Controller\Checkout
+ * @author Twispay
  */
 class BackUrl extends Action {
   /** @var \Twispay\Payments\Logger\Logger */

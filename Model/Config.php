@@ -1,6 +1,14 @@
 <?php
 namespace Twispay\Payments\Model;
 
+/**
+ * Twispay payment method configuration
+ *
+ * @category    Twispay\Payments\Model
+ * @package     Twispay_Payments
+ * @author      Twispay
+ * @codingStandardsIgnoreFile
+ */
 class Config{
   /**
    * @var \Magento\Framework\App\Config\ScopeConfigInterface

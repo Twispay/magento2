@@ -3,7 +3,7 @@
  *
  * @category    Twispay
  * @package     Twispay_Payments
- * @author      Webliant Software
+ * @author      Twispay
  */
 define(
   [

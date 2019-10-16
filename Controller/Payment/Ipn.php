@@ -10,6 +10,7 @@ use Magento\Quote\Model\QuoteIdMaskFactory;
  * This controller handles the server to server notification
  *
  * @package Twispay\Payments\Controller\Checkout
+ * @author Twispay
  */
 class Ipn extends Action {
   /** @var \Twispay\Payments\Model\Config */

@@ -2,6 +2,13 @@
 
 namespace Twispay\Payments\Plugin;
 
+/**
+ * Twispay payment method  CSRF validator
+ *
+ * @category    Twispay\Payments\Plugin
+ * @package     Twispay_Payments
+ * @author      Twispay
+ */
 class PaymentInformationManagement {
   /** @var \Twispay\Payments\Logger\Logger */
   private $log;

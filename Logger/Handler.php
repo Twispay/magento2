@@ -8,6 +8,7 @@ use Monolog\Formatter\LineFormatter;
 /**
  * Handler for Twispay logs
  * @package Twispay\Payments\Logger
+ * @author Twispay
  * @codingStandardsIgnoreFile
  */
 class Handler extends \Magento\Framework\Logger\Handler\Base {

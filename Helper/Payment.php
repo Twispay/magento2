@@ -13,6 +13,7 @@ use Magento\Sales\Model\Order\Invoice;
  * Helper class for everything that has to do with payment
  *
  * @package Twispay\Payments\Helper
+ * @author Twispay
  */
 class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
   /** @var \Twispay\Payments\Model\Config */
@@ -151,7 +152,7 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
    * @param orderId: The ID of the order for which to extarct
    *                  the transactions list.
    * 
-   * @return Order
+   * @return List of Magento\Sales\Model\Order\Payment\Transaction
    */
   public function getTransactions($orderId){
     return $this->transactions->create()->addOrderIdFilter($orderId)->getItems();
