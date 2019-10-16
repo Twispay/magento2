@@ -7,6 +7,7 @@ use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Framework\Exception\PaymentException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\App\ObjectManager;
+use Magento\Sales\Model\Order\Invoice;
 
 /**
  * Helper class for everything that has to do with payment
@@ -14,32 +15,59 @@ use Magento\Framework\App\ObjectManager;
  * @package Twispay\Payments\Helper
  */
 class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
-  /**
-   * Store manager object
-   *
-   * @var \Magento\Store\Model\StoreManagerInterface
-   */
+  /** @var \Magento\Store\Model\StoreManagerInterface: Store manager object */
   private $storeManager;
-
-  /**
-   * @var \Twispay\Payments\Logger\Logger
-   */
+  /** @var \Twispay\Payments\Logger\Logger */
   private $log;
-
-  /**
-   * @var \Twispay\Payments\Model\Config
-   */
+  /** @var \Twispay\Payments\Model\Config */
   private $config;
-
-  /**
-   * @var \Magento\Framework\App\ObjectManager
-   */
+  /** @var \Magento\Framework\App\ObjectManager */
   private $objectManager;
-
-  /**
-   * @var \Magento\Sales\Api\OrderRepositoryInterface
-   */
+  /** @var \Magento\Sales\Api\OrderRepositoryInterface */
   private $orderRepository;
+  /** @var \Magento\Sales\Model\Service\InvoiceService */
+  private $invoiceService;
+  /** @var \Magento\Framework\DB\TransactionFactory */
+  private $transactionFactory;
+  /** @var \Magento\Sales\Api\Data\TransactionSearchResultInterfaceFactory */
+  private $transactions;
+
+  /* Array containing the possible result statuses. */
+  private $resultStatuses = [ 'UNCERTAIN' => 'uncertain' /* No response from provider */
+                            , 'IN_PROGRESS' => 'in-progress' /* Authorized */
+                            , 'COMPLETE_OK' => 'complete-ok' /* Captured */
+                            , 'COMPLETE_FAIL' => 'complete-failed' /* Not authorized */
+                            , 'CANCEL_OK' => 'cancel-ok' /* Capture reversal */
+                            , 'REFUND_OK' => 'refund-ok' /* Settlement reversal */
+                            , 'VOID_OK' => 'void-ok' /* Authorization reversal */
+                            , 'CHARGE_BACK' => 'charge-back' /* Charge-back received */
+                            , 'THREE_D_PENDING' => '3d-pending' /* Waiting for 3d authentication */
+                            , 'EXPIRING' => 'expiring' /* The recurring order has expired */
+                            ];
+
+  /************************** Inner functions START **************************/
+  /**
+   * Function that changes the state of an order and adds history comment.
+   *
+   * @param order: The purchase order to update.
+   * @param state: The state to be set to the order.
+   * @param status: The status to be set to the order.
+   * @param comment: The comment to add to that status change.
+   */
+  private function setOrderState($order, $state, $status, $comment){
+    /* Set the state of the order. */
+    $order->setData('state', $state);
+    $order->setStatus($status);
+
+    /* Add history comment. */
+    $history = $order->addStatusToHistory($status, $comment, /*isCustomerNotified*/FALSE);
+
+    /* Save changes. */
+    $order->save();
+  }
+  /************************** Inner functions END **************************/
+
+
 
   /**
    * Constructor
@@ -49,47 +77,74 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
    * @param \Twispay\Payments\Logger\Logger $twispayLogger
    * @param \Magento\Store\Model\StoreManagerInterface $storeManager
    * @param \Magento\Sales\Api\OrderRepositoryInterface $orderRepository
+   * @param \Magento\Sales\Model\Service\InvoiceService $invoiceService
+   * @param \Magento\Framework\DB\TransactionFactory $transactionFactory
+   * @param \Magento\Sales\Api\Data\TransactionSearchResultInterfaceFactory $transactions
    */
   public function __construct( \Magento\Framework\App\Helper\Context $context
                              , \Twispay\Payments\Model\Config $config
                              , \Twispay\Payments\Logger\Logger $twispayLogger
                              , \Magento\Store\Model\StoreManagerInterface $storeManager
-                             , \Magento\Sales\Api\OrderRepositoryInterface $orderRepository)
+                             , \Magento\Sales\Api\OrderRepositoryInterface $orderRepository
+                             , \Magento\Sales\Model\Service\InvoiceService $invoiceService
+                             , \Magento\Framework\DB\TransactionFactory $transactionFactory
+                             , \Magento\Sales\Api\Data\TransactionSearchResultInterfaceFactory $transactions)
   {
     parent::__construct($context);
     $this->config = $config;
     $this->log = $twispayLogger;
     $this->storeManager = $storeManager;
     $this->orderRepository = $orderRepository;
+    $this->invoiceService = $invoiceService;
+    $this->transactionFactory = $transactionFactory;
+    $this->transactions = $transactions;
 
     $this->objectManager = ObjectManager::getInstance();
   }
 
 
-  /************************** Notification START **************************/
   /**
-   * Extract the full path for the back URL response.
+   * Function that extracts an order.
    * 
-   * @return string
+   * @param orderId: The ID of the order to extarct.
+   * 
+   * @return Magento\Sales\Model\Order if found
+   *         NULL if not found
    */
-  public function getBackUrl(){
-    $backUrl = $this->config->getBackUrl();
-    if ("" !== $backUrl) {
-      return $this->storeManager->getStore()->getBaseUrl() . $backUrl;
+  public function getOrder($orderId){
+    try {
+      $order = $this->orderRepository->get($orderId);
+    } catch (\Magento\Framework\Exception\NoSuchEntityException $exception) {
+      $order = NULL;
     }
 
-    return "";
+    return $order;
   }
 
 
   /**
+   * Function that extracts a list ot transactions for an order.
+   * 
+   * @param orderId: The ID of the order for which to extarct
+   *                  the transactions list.
+   * 
+   * @return Order
+   */
+  public function getOrderTransactions($orderId){
+    return $this->transactions->create()->addOrderIdFilter($orderId)->getItems();
+  }
+
+
+
+  /************************** Notification START **************************/
+  /**
    * Get the `jsonRequest` parameter (order parameters as JSON and base64 encoded).
    *
-   * @param array $orderData The order parameters.
+   * @param orderData: Array containing the order parameters.
    *
    * @return string
    */
-  public function getBase64JsonRequest(array $orderData) {
+  public function getJsonRequest(array $orderData) {
     return base64_encode(json_encode($orderData));
   }
 
@@ -97,161 +152,51 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
   /**
    * Get the `checksum` parameter (the checksum computed over the `jsonRequest` and base64 encoded).
    *
-   * @param array $orderData The order parameters.
-   * @param string $secretKey The secret key (from Twispay).
+   * @param orderData: The order parameters.
+   * @param secretKey: The secret key (from Twispay).
    *
    * @return string
    */
-  public function getBase64Checksum(array $orderData, $secretKey) {
+  public function getChecksum(array $orderData, $secretKey) {
     $hmacSha512 = hash_hmac(/*algo*/'sha512', json_encode($orderData), $secretKey, /*raw_output*/true);
     return base64_encode($hmacSha512);
   }
-  /************************** Notification END **************************/
-
-
-
-  /************************** Response START **************************/
-  /**
-   * Decrypt the response from Twispay server.
-   *
-   * @param string $tw_encryptedMessage - The encripted server message.
-   *
-   * @return Array([key => value,]) - If everything is ok array containing the decrypted data.
-   *         bool(FALSE)            - If decription fails.
-   */
-  public function twispay_tw_decrypt_message($tw_encryptedMessage) {
-    /* Get the API key from the cache to be used as a decryption key */
-    $privateKey = $this->config->getPrivateKey();
-    $encrypted = (string)$tw_encryptedMessage;
-
-    if(!strlen($encrypted) || (FALSE == strpos($encrypted, ','))) {
-      return FALSE;
-    }
-
-    /* Get the IV and the encrypted data */
-    $encryptedParts = explode(/*delimiter*/',', $encrypted, /*limit*/2);
-    $iv = base64_decode($encryptedParts[0]);
-    if(FALSE === $iv) {
-      return FALSE;
-    }
-
-    $encryptedData = base64_decode($encryptedParts[1]);
-    if(FALSE === $encryptedData) {
-      return FALSE;
-    }
-
-    /* Decrypt the encrypted data */
-    $decryptedResponse = openssl_decrypt($encryptedData, /*method*/'aes-256-cbc', $privateKey, /*options*/OPENSSL_RAW_DATA, $iv);
-    if(FALSE === $decryptedResponse) {
-      return FALSE;
-    }
-
-    /* JSON decode the decrypted data. */
-    return json_decode($decryptedResponse, /*assoc*/TRUE, /*depth*/4);
-  }
-
-
-  /**
-   * Function that validates a decripted response.
-   *
-   * @param tw_response The server decripted and JSON decoded response
-   *
-   * @return bool(FALSE)     - If any error occurs
-   *         bool(TRUE)      - If the validation is successful
-   */
-  public function twispay_tw_checkValidation($tw_response) {
-    $tw_errors = array();
-
-    if(!$tw_response) {
-      return FALSE;
-    }
-
-    if(empty($tw_response['status']) && empty($tw_response['transactionStatus'])) {
-      $tw_errors[] = __('[RESPONSE-ERROR]: Empty status');
-    }
-
-    if(empty($tw_response['identifier'])) {
-      $tw_errors[] = __('[RESPONSE-ERROR]: Empty identifier');
-    }
-
-    if(empty($tw_response['externalOrderId'])) {
-      $tw_errors[] = __('[RESPONSE-ERROR]: Empty externalOrderId');
-    }
-
-    if(empty($tw_response['transactionId'])) {
-      $tw_errors[] = __('[RESPONSE-ERROR]: Empty transactionId');
-    }
-
-    if(sizeof($tw_errors)) {
-      foreach($tw_errors as $err) {
-        $this->log->error($err);
-      }
-
-      return FALSE;
-    } else {
-      $data = [ 'externalOrderId' => explode('_', $tw_response['externalOrderId'])[0]
-              , 'status'          => (empty($tw_response['status'])) ? ($tw_response['transactionStatus']) : ($tw_response['status'])
-              , 'identifier'      => $tw_response['identifier']
-              , 'orderId'         => (int)$tw_response['orderId']
-              , 'transactionId'   => (int)$tw_response['transactionId']
-              , 'customerId'      => (int)$tw_response['customerId']
-              , 'cardId'          => (!empty($tw_response['cardId'])) ? (( int )$tw_response['cardId']) : (0)];
-
-      $this->log->notice(__('[RESPONSE]: Data: ') . json_encode($data));
-
-      if(!in_array($data['status'], $this->resultStatuses)){
-        $this->log->error(__('[RESPONSE-ERROR]: Wrong status: ') . $data['status']);
-
-        return FALSE;
-      }
-
-      $this->log->notice(__('[RESPONSE]: Validating completed for order ID: ') . $data['externalOrderId']);
-
-      return TRUE;
-    }
-  }
-  /************************** Response END **************************/
-
 
 
   /**
    * Prepares the request data to be sent to the Twispay gateway
    *
-   * @param $orderId - The ID of the ordered to be payed.
-   * @param $isGuest - Flag indicating if the order comes from
-   *                    an authenticated customer or a guest.
+   * @param orderId - The ID of the ordered to be payed.
+   * @param isGuest - Flag indicating if the order comes from an authenticated customer or a guest.
    *
-   * @return array $data - <Key, Value> array representing the JSON
-   *                        to be sent to the payment gateway.
+   * @return array([key => value,]) - Representing the JSON to be sent to the payment gateway.
+   *         bool(FALSE)            - Otherwise      
    */
-  public function createRequest($orderId, $isGuest) {
+  public function createPurchaseRequest($orderId, $isGuest) {
     /* Get the details of the last order. */
     $order = $this->orderRepository->get($orderId);
-    $this->log->debug(__FUNCTION__ . ': orderId=' . $orderId);
+    $this->log->info(__FUNCTION__ . __(' Create payment request for order #%1', $orderId));
 
     /* Set order status to payment pending. */
     $order->setState(Order::STATE_PENDING_PAYMENT, true);
     $order->setStatus(Order::STATE_PENDING_PAYMENT);
-    $order->addStatusToHistory($order->getStatus(), __('Redirecting to Twispay payment gateway'));
+    $order->addStatusToHistory($order->getStatus(), __(' Redirecting to Twispay payment gateway'));
     $order->save();
 
     /* Read the configuration values. */
     $siteId = $this->config->getSiteId();
-    $apiKey = $this->config->getPrivateKey();
-    $url = $this->config->getRedirectUrl();
-
-    if(('' == $siteId) || ('' == $apiKey)){
-      $this->log->error(__('Payment failed: Incomplete or missing configuration.'));
+    $apiKey = $this->config->getApiKey();
+    if (('' == $siteId) || ('' == $apiKey)) {
+      $this->log->error(__(' Payment failed: Incomplete or missing configuration.'));
       return FALSE;
     }
-    $this->log->debug(__FUNCTION__ . ': siteId=' . $siteId . ' apiKey=' . $apiKey . ' url=' . $url);
 
     /* Extract the billind and shipping addresses. */
     $billingAddress = $order->getBillingAddress();
     $shippingAddress = $order->getShippingAddress();
 
     /* Extract the customer details. */
-    $customer = [ 'identifier' => (TRUE == $isGuest) ? ('_' . $orderId . '_' . date('YmdHis')) : ('_' . $billingAddress->getCustomerId())
+    $customer = [ 'identifier' => (TRUE == $isGuest) ? ('p_' . $orderId . '_' . date('YmdHis')) : ('p_' . $billingAddress->getCustomerId() . '_' . date('YmdHis'))
                 , 'firstName' => ($billingAddress->getFirstname()) ? ($billingAddress->getFirstname()) : ($shippingAddress->getFirstname())
                 , 'lastName' => ($billingAddress->getLastname()) ? ($billingAddress->getLastname()) : ($shippingAddress->getLastname())
                 , 'country' => ($billingAddress->getCountryId()) ? ($billingAddress->getCountryId()) : ($shippingAddress->getCountryId())
@@ -266,19 +211,19 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
 
     /* Extract the items details. */
     $items = array();
-    foreach($order->getAllVisibleItems() as $item){
+    foreach ($order->getAllVisibleItems() as $item){
       $items[] = [ 'item' => $item->getName()
-                , 'units' =>  (int) $item->getQtyOrdered()
-                , 'unitPrice' => (string) number_format((float) $item->getPriceInclTax(), 2, '.', '')
-                /* , 'type' => '' */
-                /* , 'code' => '' */
-                /* , 'vatPercent' => '' */
-                /* , 'itemDescription' => '' */
-                ];
+                 , 'units' =>  (int) $item->getQtyOrdered()
+                 , 'unitPrice' => (string) number_format((float) $item->getPriceInclTax(), 2, '.', '')
+                 /* , 'type' => '' */
+                 /* , 'code' => '' */
+                 /* , 'vatPercent' => '' */
+                 /* , 'itemDescription' => '' */
+                 ];
     }
 
     /* Check if shiping price needs to be added. */
-    if(0 < $order->getShippingAmount()){
+    if (0 < $order->getShippingAmount()) {
       $items[] = [ 'item' => "Transport"
                  , 'units' =>  1
                  , 'unitPrice' => (string) number_format((float) $order->getShippingAmount(), 2, '.', '')
@@ -319,18 +264,365 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
                  , 'cardTransactionMode' => 'authAndCapture'
                  /* , 'cardId' => 0 */
                  , 'invoiceEmail' => ''
-                 , 'backUrl' => $this->getBackUrl()
+                 , 'backUrl' => $this->storeManager->getStore()->getBaseUrl() . $this->config->getBackUrl()
                  /* , 'customData' => [] */
     ];
 
-    /* Encode the data and calculate the checksum. */
-    $base64JsonRequest = $this->getBase64JsonRequest($orderData);
-    $this->log->debug(__FUNCTION__ . ': base64JsonRequest=' . $base64JsonRequest);
-    $base64Checksum = $this->getBase64Checksum($orderData, $apiKey);
-    $this->log->debug(__FUNCTION__ . ': base64Checksum=' . $base64Checksum);
+    $this->log->debug(__FUNCTION__ . ': orderData=' . print_r($orderData, TRUE));
 
-    return ['jsonRequest' => $base64JsonRequest, 'checksum' => $base64Checksum];
+    /* Encode the data and calculate the checksum. */
+    $jsonRequest = $this->getJsonRequest($orderData);
+    $this->log->debug(__FUNCTION__ . ': jsonRequest=' . $jsonRequest);
+    $checksum = $this->getChecksum($orderData, $apiKey);
+    $this->log->debug(__FUNCTION__ . ': checksum=' . $checksum);
+
+    return ['jsonRequest' => $jsonRequest, 'checksum' => $checksum];
   }
+  /************************** Notification END **************************/
+
+
+
+  /************************** Response START **************************/
+  /**
+   * Decrypt the response from Twispay server.
+   *
+   * @param encryptedMessage: - The encripted server message.
+   * @param secretKey:        - The secret key (from Twispay).
+   *
+   * @return Array([key => value,]) - If everything is ok array containing the decrypted data.
+   *         bool(FALSE)            - If decription fails.
+   */
+  public function twispay_tw_decrypt_message($encryptedMessage, $secretKey) {
+    $encrypted = (string)$encryptedMessage;
+
+    if(!strlen($encrypted) || (FALSE === strpos($encrypted, ','))) {
+      return FALSE;
+    }
+
+    /* Get the IV and the encrypted data */
+    $encryptedParts = explode(/*delimiter*/',', $encrypted, /*limit*/2);
+    $iv = base64_decode($encryptedParts[0]);
+    if(FALSE === $iv) {
+      return FALSE;
+    }
+
+    $encryptedData = base64_decode($encryptedParts[1]);
+    if(FALSE === $encryptedData) {
+      return FALSE;
+    }
+
+    /* Decrypt the encrypted data */
+    $decryptedResponse = openssl_decrypt($encryptedData, /*method*/'aes-256-cbc', $secretKey, /*options*/OPENSSL_RAW_DATA, $iv);
+    if(FALSE === $decryptedResponse) {
+      return FALSE;
+    }
+
+    /* JSON decode the decrypted data. */
+    $decodedResponse = json_decode($decryptedResponse, /*assoc*/TRUE, /*depth*/4);
+
+    /* Check if the decryption was successful. */
+    if (NULL === $decodedResponse) {
+      return FALSE;
+    }
+
+    return $decodedResponse;
+  }
+
+
+  /**
+   * Function that validates a decripted response.
+   *
+   * @param response The server decripted and JSON decoded response
+   *
+   * @return bool(FALSE)     - If any error occurs
+   *         bool(TRUE)      - If the validation is successful
+   */
+  public function twispay_tw_checkValidation($response) {
+    $errors = array();
+
+    if(!$response) {
+      return FALSE;
+    }
+
+    if(empty($response['status']) && empty($response['transactionStatus'])) {
+      $errors[] = __(' [RESPONSE-ERROR]: Empty status');
+    }
+
+    if(empty($response['identifier'])) {
+      $errors[] = __(' [RESPONSE-ERROR]: Empty identifier');
+    }
+
+    if(empty($response['externalOrderId'])) {
+      $errors[] = __(' [RESPONSE-ERROR]: Empty externalOrderId');
+    }
+
+    if(empty($response['transactionId'])) {
+      $errors[] = __(' [RESPONSE-ERROR]: Empty transactionId');
+    }
+
+    if(sizeof($errors)) {
+      foreach($errors as $err) {
+        $this->log->error(__FUNCTION__ . $err);
+      }
+
+      return FALSE;
+    } else {
+      $data = [ 'externalOrderId' => explode('_', $response['externalOrderId'])[0]
+              , 'status'          => (empty($response['status'])) ? ($response['transactionStatus']) : ($response['status'])
+              , 'identifier'      => $response['identifier']
+              , 'orderId'         => (int)$response['orderId']
+              , 'transactionId'   => (int)$response['transactionId']
+              , 'customerId'      => (int)$response['customerId']
+              , 'cardId'          => (!empty($response['cardId'])) ? (( int )$response['cardId']) : (0)];
+
+      $this->log->info(__FUNCTION__ . __(' [RESPONSE]: Data: ') . json_encode($data));
+
+      if(!in_array($data['status'], $this->resultStatuses)){
+        $this->log->error(__FUNCTION__ . __(' [RESPONSE-ERROR]: Wrong status: ') . $data['status']);
+
+        return FALSE;
+      }
+
+      $this->log->info(__FUNCTION__ . __(' [RESPONSE]: Validation completed for order ID: ') . $data['externalOrderId']);
+
+      return TRUE;
+    }
+  }
+
+
+  /**
+   * Update the status of a purchase order according to the received server status.
+   *
+   * @param purchase: The purchase order for which to update the status.
+   * @param transactionId: The unique server transaction ID of the purchase.
+   * @param serverStatus: The status received from server.
+   *
+   * @return bool(FALSE)     - If server status in: [COMPLETE_FAIL, THREE_D_PENDING]
+   *         bool(TRUE)      - If server status in: [IN_PROGRESS, COMPLETE_OK]
+   */
+  public function updateStatus_purchase_backUrl($purchase, $transactionId, $serverStatus){
+    switch ($serverStatus) {
+      case $this->resultStatuses['COMPLETE_FAIL']:
+        /* Set order status. */
+        $this->setOrderState( $purchase
+                            , Order::STATE_CANCELED
+                            , Order::STATE_CANCELED
+                            , __(' Order #%1 canceled as payment for transaction #%2 failed', $purchase->getIncrementId(), $transactionId));
+
+        $this->log->error(__FUNCTION__ . __(' [RESPONSE]: Status failed for order ID: ') . $purchase->getIncrementId());
+        return FALSE;
+      break;
+
+      case $this->resultStatuses['THREE_D_PENDING']:
+        /* Set order status. */
+        $this->setOrderState( $purchase
+                            , Order::STATE_PENDING_PAYMENT
+                            , Order::STATE_PENDING_PAYMENT
+                            , __(' Order #%1 pended as payment for transaction #%2 is pending', $purchase->getIncrementId(), $transactionId));
+
+        $this->log->warning(__FUNCTION__ . __(' [RESPONSE]: Status three-d-pending for order ID: ') . $purchase->getIncrementId());
+        return FALSE;
+      break;
+
+      case $this->resultStatuses['IN_PROGRESS']:
+      case $this->resultStatuses['COMPLETE_OK']:
+        /* Set order status. */
+        $this->setOrderState( $purchase
+                            , Order::STATE_PROCESSING
+                            , Order::STATE_PROCESSING
+                            , __(' Order #%1 processing as payment for transaction #%2 is successful', $purchase->getIncrementId(), $transactionId));
+
+        $this->log->info(__FUNCTION__ . __(' [RESPONSE]: Status complete-ok for order ID: ') . $purchase->getIncrementId());
+        return TRUE;
+      break;
+
+      default:
+        $this->log->error(__FUNCTION__ . __(' [RESPONSE-ERROR]: Wrong status: ') . $serverStatus);
+        return FALSE;
+      break;
+    }
+  }
+
+
+  /**
+   * Update the status of a purchase order according to the received server status.
+   *
+   * @param purchase: The purchase order for which to update the status.
+   * @param transactionId: The unique transaction ID of the order.
+   * @param serverStatus: The status received from server.
+   *
+   * @return bool(FALSE)     - If server status in: [COMPLETE_FAIL, CANCEL_OK, VOID_OK, CHARGE_BACK, THREE_D_PENDING]
+   *         bool(TRUE)      - If server status in: [REFUND_OK, IN_PROGRESS, COMPLETE_OK]
+   */
+  public function updateStatus_purchase_IPN($purchase, $transactionId, $serverStatus){
+    switch ($serverStatus) {
+      case $this->resultStatuses['COMPLETE_FAIL']:
+        /* Set order status. */
+        $this->setOrderState( $purchase
+                            , Order::STATE_CANCELED
+                            , Order::STATE_CANCELED
+                            , __(' Order #%1 canceled as payment for transaction #%2 failed', $purchase->getIncrementId(), $transactionId));
+
+        $this->log->error(__FUNCTION__ . __(' [RESPONSE]: Status failed for order ID: ') . $purchase->getIncrementId());
+        return FALSE;
+      break;
+
+      case $this->resultStatuses['REFUND_OK']:
+        /* Set order status. */
+        if($purchase->getTotalPaid() > $purchase->getTotalRefunded()){
+          $this->setOrderState( $purchase
+                              , Order::STATE_PROCESSING
+                              , Order::STATE_PROCESSING
+                              , __(' Order #%1 processing as payment for transaction #%2 is partially refunded', $purchase->getIncrementId(), $transactionId));
+        } else {
+          $this->setOrderState( $purchase
+                              , Order::STATE_CLOSED
+                              , Order::STATE_CLOSED
+                              , __(' Order #%1 closed as payment for transaction #%2 has been refunded', $purchase->getIncrementId(), $transactionId));
+        }
+
+        $this->log->info(__FUNCTION__ . __(' [RESPONSE]: Status refund-ok for order ID: ') . $purchase->getIncrementId());
+        return TRUE;
+      break;
+
+      case $this->resultStatuses['CANCEL_OK']:
+        /* Set order status. */
+        $this->setOrderState( $purchase
+                            , Order::STATE_CANCELED
+                            , Order::STATE_CANCELED
+                            , __(' Order #%1 canceled as payment for transaction #%2 has been canceled', $purchase->getIncrementId(), $transactionId));
+
+        $this->log->info(__FUNCTION__ . __(' [RESPONSE]: Status cancel-ok for order ID: ') . $purchase->getIncrementId());
+        return FALSE;
+      break;
+
+      case $this->resultStatuses['VOID_OK']:
+        /* Set order status. */
+        $this->setOrderState( $purchase
+                            , Order::STATE_CANCELED
+                            , Order::STATE_CANCELED
+                            , __(' Order #%1 canceled as payment for transaction #%2 has been voided ok', $purchase->getIncrementId(), $transactionId));
+
+        $this->log->info(__FUNCTION__ . __(' [RESPONSE]: Status void-ok for order ID: ') . $purchase->getIncrementId());
+        return FALSE;
+      break;
+
+      case $this->resultStatuses['CHARGE_BACK']:
+        /* Set order status. */
+        $this->setOrderState( $purchase
+                            , Order::STATE_CANCELED
+                            , Order::STATE_CANCELED
+                            , __(' Order #%1 canceled as payment for transaction #%2 has been charged back', $purchase->getIncrementId(), $transactionId));
+
+        $this->log->info(__FUNCTION__ . __(' [RESPONSE]: Status charge-back for order ID: ') . $purchase->getIncrementId());
+        return FALSE;
+      break;
+
+      case $this->resultStatuses['THREE_D_PENDING']:
+        /* Set order status. */
+        $this->setOrderState( $purchase
+                            , Order::STATE_PENDING_PAYMENT
+                            , Order::STATE_PENDING_PAYMENT
+                            , __(' Order #%1 pended as payment for transaction #%2 is pending', $purchase->getIncrementId(), $transactionId));
+
+        $this->log->warning(__FUNCTION__ . __(' [RESPONSE]: Status three-d-pending for order ID: ') . $purchase->getIncrementId());
+        return FALSE;
+      break;
+
+      case $this->resultStatuses['IN_PROGRESS']:
+      case $this->resultStatuses['COMPLETE_OK']:
+        /* Set order status. */
+        $this->setOrderState( $purchase
+                            , Order::STATE_PROCESSING
+                            , Order::STATE_PROCESSING
+                            , __(' Order #%1 processing as payment for transaction #%2 is successful', $purchase->getIncrementId(), $transactionId));
+
+        $this->log->info(__FUNCTION__ . __(' [RESPONSE]: Status complete-ok for order ID: ') . $purchase->getIncrementId());
+        return TRUE;
+      break;
+
+      default:
+        $this->log->error(__FUNCTION__ . __(' [RESPONSE-ERROR]: Wrong status: ') . $serverStatus);
+        return FALSE;
+      break;
+    }
+  }
+
+
+  /**
+   * Function that adds a new transaction to the order.
+   *
+   * @param order: The order to which to add the transaction.
+   * @param serverResponse: Array containing the server decripted response.
+   */
+  public function addOrderTransaction($order, $serverResponse){
+    /* Save the payment transaction. */
+    $payment = $order->getPayment();
+    $payment->setTransactionId($serverResponse['transactionId']);
+    $transaction = $payment->addTransaction(Transaction::TYPE_CAPTURE, null, false, 'OK');
+    $transaction->setAdditionalInformation( Transaction::RAW_DETAILS
+                                          , [ 'identifier'    => $serverResponse['identifier']
+                                            , 'status'        => $serverResponse['status']
+                                            , 'orderId'       => $serverResponse['orderId']
+                                            , 'transactionId' => $serverResponse['transactionId']
+                                            , 'customerId'    => $serverResponse['customerId']
+                                            , 'cardId'        => $serverResponse['cardId']
+                                            , 'storeId'       => $this->storeManager->getStore()->getId()]);
+    $payment->setIsTransactionClosed(TRUE);
+    $transaction->save();
+    $order->save();
+  }
+
+
+  /**
+   * Function that adds a transaction to an invoice.
+   *
+   * @param order: The order that has the transaction and the invoice.
+   * @param transactionId: The ID of the transaction.
+   */
+  public function addPurchaseInvoice($order, $transactionId){
+    /* Add the transaction to the invoice. */
+    $invoice = $order->getInvoiceCollection()->addAttributeToSort('created_at', 'DSC')->setPage(1, 1)->getFirstItem();
+    $invoice->setTransactionId($transactionId);
+    $invoice->save();
+  }
+
+  /**
+   * Create Invoice Based on Order Object
+   * 
+   * @param order: The order that has the transaction and the invoice.
+   * @param transactionId: The ID of the transaction.
+   * 
+   * @return bool
+   */
+  public function generateInvoice($order, $transactionId){
+    /* Check if the order is cannot be invoiced. */
+    if(FALSE == $order->canInvoice()) {
+      return FALSE;
+    }
+
+    $invoice = $this->invoiceService->prepareInvoice($order);
+    if (!$invoice || !$invoice->getTotalQty()) {
+      return FALSE;
+    }
+
+    $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_OFFLINE);
+    $invoice->register();
+    $invoice->getOrder()->setCustomerNoteNotify(FALSE);
+    $invoice->getOrder()->setIsInProcess(TRUE);
+    $invoice->setTransactionId($transactionId);
+    $invoice->save();
+    $order->addStatusHistoryComment('Automatically INVOICED', FALSE);
+    $transactionSave = $this->transactionFactory->create()->addObject($invoice)->addObject($invoice->getOrder());
+    $transactionSave->save();
+
+    return TRUE;
+  }
+  /************************** Response END **************************/
+
+
+
+  
 
 
 
@@ -341,8 +633,8 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
    * @param $response
    * @throws PaymentException
    */
-  public function processGatewayResponse($response)
-  {
+  public function processGatewayResponse($response) {
+    $this->log->info(__FUNCTION__ . ' START');
     $orderId = (int)$response->externalOrderId;
     $transactionId = (int)$response->transactionId;
     $timestamp = $response->timestamp;
@@ -351,52 +643,45 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
     $details['card_id'] = $response->cardId;
     $details['customer'] = $response->identifier;
 
-    /** @var \Magento\Sales\Model\Order $order */
+    /** @var Order $order */
     $order = $this->orderRepository->get($orderId);
 
     if (empty($order) || !$order->getId()) {
-        $this->log->error('Order don\'t exists in store', [$orderId]);
-        throw new PaymentException(__('Order doesn\'t exists in store'));
+      $this->log->error('Order don\'t exists in store', [$orderId]);
+      throw new PaymentException(__(' Order doesn\'t exists in store'));
     }
 
-    // Add payment transaction
+    /* Add payment transaction */
     $payment = $order->getPayment();
     $paymentMethod = $payment->getMethodInstance();
 
     if ($paymentMethod->getCode() !== \Twispay\Payments\Model\Twispay::METHOD_CODE) {
-        $this->log->error('Unsupported payment method', [$paymentMethod->getCode()]);
-        throw new PaymentException(__('Unsupported payment method'));
+      $this->log->error(' Unsupported payment method', [$paymentMethod->getCode()]);
+      throw new PaymentException(__(' Unsupported payment method'));
     }
 
     if ($order->getState() == Order::STATE_PENDING_PAYMENT) {
-        $payment->setTransactionId($transactionId);
-        $payment->setLastTransId($transactionId);
+      $payment->setTransactionId($transactionId);
+      $payment->setLastTransId($transactionId);
 
-        // Create the transaction
-        /** @var \Magento\Sales\Model\Order\Payment\Transaction $transaction */
-        $transaction = $order->getPayment()->addTransaction(Transaction::TYPE_PAYMENT, null, true);
-        $transaction->setAdditionalInformation(Transaction::RAW_DETAILS, $details);
-        $transaction->setCreatedAt($timestamp);
-        $transaction->save();
+      /* Create the transaction */
+      $transaction = $order->getPayment()->addTransaction(Transaction::TYPE_PAYMENT, null, true);
+      $transaction->setAdditionalInformation(Transaction::RAW_DETAILS, $details);
+      $transaction->setCreatedAt($timestamp);
+      $transaction->save();
 
-        $payment->addTransactionCommentsToOrder(
-            $transaction,
-            __('The authorized amount is %1.', $order->getBaseCurrency()->formatTxt($order->getGrandTotal()))
-        );
-        $payment->setParentTransactionId(null);
-        $payment->save();
+      $payment->addTransactionCommentsToOrder($transaction, __(' The authorized amount is %1 ', $order->getBaseCurrency()->formatTxt($order->getGrandTotal())));
+      $payment->setParentTransactionId(null);
+      $payment->save();
 
-        // Update the order state
-        $order->setState(Order::STATE_PROCESSING, true);
-        $order->setStatus(Order::STATE_PROCESSING);
-        $order->setExtCustomerId($response->customerId);
-        $order->setExtOrderId($response->orderId);
-        $order->addStatusToHistory(
-            $order->getStatus(),
-            __('Order paid successfully with reference #%1', $transactionId)
-        );
+      /* Update the order state */
+      $order->setState(Order::STATE_PROCESSING, true);
+      $order->setStatus(Order::STATE_PROCESSING);
+      $order->setExtCustomerId($response->customerId);
+      $order->setExtOrderId($response->orderId);
+      $order->addStatusToHistory($order->getStatus(), __(' Order paid successfully with reference #%1', $transactionId));
 
-        $order->save();
+      $order->save();
     }
   }
 }
