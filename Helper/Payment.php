@@ -15,14 +15,12 @@ use Magento\Sales\Model\Order\Invoice;
  * @package Twispay\Payments\Helper
  */
 class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
-  /** @var \Magento\Store\Model\StoreManagerInterface: Store manager object */
-  private $storeManager;
-  /** @var \Twispay\Payments\Logger\Logger */
-  private $log;
   /** @var \Twispay\Payments\Model\Config */
   private $config;
-  /** @var \Magento\Framework\App\ObjectManager */
-  private $objectManager;
+  /** @var \Twispay\Payments\Logger\Logger */
+  private $log;
+  /** @var \Magento\Store\Model\StoreManagerInterface: Store manager object */
+  private $storeManager;
   /** @var \Magento\Sales\Api\OrderRepositoryInterface */
   private $orderRepository;
   /** @var \Magento\Sales\Model\Service\InvoiceService */
@@ -31,6 +29,8 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
   private $transactionFactory;
   /** @var \Magento\Sales\Api\Data\TransactionSearchResultInterfaceFactory */
   private $transactions;
+  /** @var \Magento\Framework\App\ObjectManager */
+  private $objectManager;
 
   /* Array containing the possible result statuses. */
   private $resultStatuses = [ 'UNCERTAIN' => 'uncertain' /* No response from provider */
@@ -72,18 +72,18 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
   /**
    * Constructor
    *
-   * @param \Magento\Framework\App\Helper\Context $context
    * @param \Twispay\Payments\Model\Config $config
    * @param \Twispay\Payments\Logger\Logger $twispayLogger
+   * @param \Magento\Framework\App\Helper\Context $context
    * @param \Magento\Store\Model\StoreManagerInterface $storeManager
    * @param \Magento\Sales\Api\OrderRepositoryInterface $orderRepository
    * @param \Magento\Sales\Model\Service\InvoiceService $invoiceService
    * @param \Magento\Framework\DB\TransactionFactory $transactionFactory
    * @param \Magento\Sales\Api\Data\TransactionSearchResultInterfaceFactory $transactions
    */
-  public function __construct( \Magento\Framework\App\Helper\Context $context
-                             , \Twispay\Payments\Model\Config $config
+  public function __construct( \Twispay\Payments\Model\Config $config
                              , \Twispay\Payments\Logger\Logger $twispayLogger
+                             , \Magento\Framework\App\Helper\Context $context
                              , \Magento\Store\Model\StoreManagerInterface $storeManager
                              , \Magento\Sales\Api\OrderRepositoryInterface $orderRepository
                              , \Magento\Sales\Model\Service\InvoiceService $invoiceService
@@ -123,14 +123,37 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
 
 
   /**
-   * Function that extracts a list ot transactions for an order.
+   * Function that extracts an transaction.
+   * 
+   * @param orderId: The ID of the order for which to extract the transaction.
+   * @param txnId: The txnId of the transaction to be extracted.
+   * 
+   * @return Magento\Sales\Model\Order\Payment\Transaction if found
+   *         NULL if not found
+   */
+  public function getTransaction($orderId, $txnId){
+    $transaction = NULL;
+
+    foreach ($this->getTransactions($orderId) as $key => $_transaction) {
+      if ($_transaction->getTxnId() == $txnId) {
+        $transaction = $_transaction;
+        break;
+      }
+    }
+
+    return $transaction;
+  }
+
+
+  /**
+   * Function that extracts a list of transactions for an order.
    * 
    * @param orderId: The ID of the order for which to extarct
    *                  the transactions list.
    * 
    * @return Order
    */
-  public function getOrderTransactions($orderId){
+  public function getTransactions($orderId){
     return $this->transactions->create()->addOrderIdFilter($orderId)->getItems();
   }
 
@@ -268,13 +291,9 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
                  /* , 'customData' => [] */
     ];
 
-    $this->log->debug(__FUNCTION__ . ': orderData=' . print_r($orderData, TRUE));
-
     /* Encode the data and calculate the checksum. */
     $jsonRequest = $this->getJsonRequest($orderData);
-    $this->log->debug(__FUNCTION__ . ': jsonRequest=' . $jsonRequest);
     $checksum = $this->getChecksum($orderData, $apiKey);
-    $this->log->debug(__FUNCTION__ . ': checksum=' . $checksum);
 
     return ['jsonRequest' => $jsonRequest, 'checksum' => $checksum];
   }
@@ -559,7 +578,9 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
     /* Save the payment transaction. */
     $payment = $order->getPayment();
     $payment->setTransactionId($serverResponse['transactionId']);
-    $transaction = $payment->addTransaction(Transaction::TYPE_CAPTURE, null, false, 'OK');
+    $payment->setLastTransId($serverResponse['transactionId']);
+    $payment->setParentTransactionId(NULL);
+    $transaction = $payment->addTransaction(Transaction::TYPE_CAPTURE, null, TRUE, 'OK');
     $transaction->setAdditionalInformation( Transaction::RAW_DETAILS
                                           , [ 'identifier'    => $serverResponse['identifier']
                                             , 'status'        => $serverResponse['status']
@@ -568,8 +589,13 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
                                             , 'customerId'    => $serverResponse['customerId']
                                             , 'cardId'        => $serverResponse['cardId']
                                             , 'storeId'       => $this->storeManager->getStore()->getId()]);
-    $payment->setIsTransactionClosed(TRUE);
+    // $transaction->setIsClosed(TRUE);
+    $transaction->setCreatedAt($serverResponse['timestamp']);
     $transaction->save();
+    $payment->save();
+
+    $order->setExtCustomerId($serverResponse['customerId']);
+    $order->setExtOrderId($serverResponse['orderId']);
     $order->save();
   }
 
@@ -596,17 +622,20 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
    * @return bool
    */
   public function generateInvoice($order, $transactionId){
+    $this->log->info(__FUNCTION__ . __(': START'));
     /* Check if the order is cannot be invoiced. */
-    if(FALSE == $order->canInvoice()) {
-      return FALSE;
-    }
+    // if(FALSE == $order->canInvoice()) {
+    //   $this->log->info(__FUNCTION__ . __(': cannot invoice'));
+    //   return FALSE;
+    // }
 
     $invoice = $this->invoiceService->prepareInvoice($order);
     if (!$invoice || !$invoice->getTotalQty()) {
+      $this->log->info(__FUNCTION__ . __(': null qty'));
       return FALSE;
     }
 
-    $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_OFFLINE);
+    $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
     $invoice->register();
     $invoice->getOrder()->setCustomerNoteNotify(FALSE);
     $invoice->getOrder()->setIsInProcess(TRUE);
@@ -619,69 +648,4 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
     return TRUE;
   }
   /************************** Response END **************************/
-
-
-
-  
-
-
-
-  /**
-   * This method receives as a parameter the response from the Twispay gateway
-   * and creates the transaction record
-   *
-   * @param $response
-   * @throws PaymentException
-   */
-  public function processGatewayResponse($response) {
-    $this->log->info(__FUNCTION__ . ' START');
-    $orderId = (int)$response->externalOrderId;
-    $transactionId = (int)$response->transactionId;
-    $timestamp = $response->timestamp;
-
-    $details = $response->custom;
-    $details['card_id'] = $response->cardId;
-    $details['customer'] = $response->identifier;
-
-    /** @var Order $order */
-    $order = $this->orderRepository->get($orderId);
-
-    if (empty($order) || !$order->getId()) {
-      $this->log->error('Order don\'t exists in store', [$orderId]);
-      throw new PaymentException(__(' Order doesn\'t exists in store'));
-    }
-
-    /* Add payment transaction */
-    $payment = $order->getPayment();
-    $paymentMethod = $payment->getMethodInstance();
-
-    if ($paymentMethod->getCode() !== \Twispay\Payments\Model\Twispay::METHOD_CODE) {
-      $this->log->error(' Unsupported payment method', [$paymentMethod->getCode()]);
-      throw new PaymentException(__(' Unsupported payment method'));
-    }
-
-    if ($order->getState() == Order::STATE_PENDING_PAYMENT) {
-      $payment->setTransactionId($transactionId);
-      $payment->setLastTransId($transactionId);
-
-      /* Create the transaction */
-      $transaction = $order->getPayment()->addTransaction(Transaction::TYPE_PAYMENT, null, true);
-      $transaction->setAdditionalInformation(Transaction::RAW_DETAILS, $details);
-      $transaction->setCreatedAt($timestamp);
-      $transaction->save();
-
-      $payment->addTransactionCommentsToOrder($transaction, __(' The authorized amount is %1 ', $order->getBaseCurrency()->formatTxt($order->getGrandTotal())));
-      $payment->setParentTransactionId(null);
-      $payment->save();
-
-      /* Update the order state */
-      $order->setState(Order::STATE_PROCESSING, true);
-      $order->setStatus(Order::STATE_PROCESSING);
-      $order->setExtCustomerId($response->customerId);
-      $order->setExtOrderId($response->orderId);
-      $order->addStatusToHistory($order->getStatus(), __(' Order paid successfully with reference #%1', $transactionId));
-
-      $order->save();
-    }
-  }
 }
