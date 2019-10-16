@@ -60,11 +60,6 @@
           <label>Contact email(Optional)</label>
           <comment><![CDATA[This email will be used on the payment error page.]]></comment>
         </field>
-        <field id="email_invoice" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
-          <label>E-mail invoice to customer</label>
-          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-          <comment><![CDATA[If this is option is enabled Magento will send a payment confirmation email.]]></comment>
-        </field>
       </group>
     </section>
   </system>

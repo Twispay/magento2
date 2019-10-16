@@ -193,9 +193,8 @@ class Twispay extends \Magento\Payment\Model\Method\AbstractMethod {
 
     /* Check if the decryption was successful, the response code is 200 and message is 'Success'. */
     if ((NULL !== $response) && (200 == $response->code) && ('Success' == $response->message)) {
-      /* Create a refund transaction */
+      /* Updated the existing refund transaction with the received answer. */
       $payment->setTransactionId($response->data->transactionId);
-      // $payment->addTransaction(Transaction::TYPE_REFUND, null, false, 'OK');
       $payment->setTransactionAdditionalInfo( Transaction::RAW_DETAILS
                                             , [ 'orderId'               => $parentTransactionData['orderId']
                                               , 'refundedTransactionId' => $parentTransactionData['transactionId']

@@ -44,3 +44,5 @@
 "Refund amount=%1 for transaction=%2 from order %3","Returnare plata valoare=%1 pentru tranzactia=%2 din comanda %3"
 " Refund failed: Incomplete or missing configuration"," Returnare plata esuata: Configurari lipsa sau partiale"
 " Refund failed: Server returned error: %1"," Returnare plata esuata: Server-ul a returnat eroarea: %1"
+"An error occurred in the process of payment","A aparut o eroare in procesul de plata"
+"The payment could not be processed. Please try again or contact the website administrator %1","Procesarea platii a esuat. Va rugam sa incercati din nou sau sa contactati administratorul website-ului"

@@ -12,7 +12,7 @@
   <default>
     <payment>
       <twispay>
-        <debug>1</debug>
+        <debug>0</debug>
         <active>1</active>
         <title>Twispay</title>
         <model>Twispay\Payments\Model\Twispay</model>
@@ -25,7 +25,6 @@
         <staging_private_key/>
         <success_page/>
         <contact_email/>
-        <email_invoice>0</email_invoice>
       </twispay>
     </payment>
   </default>

@@ -55,7 +55,12 @@ class BackUrl extends Action {
     /* Get the config values. */
     $apiKey = $this->config->getApiKey();
     if ('' == $apiKey) {
-      $this->messageManager->addErrorMessage(__FUNCTION__ . __(' Payment failed: Incomplete or missing configuration'));
+      /* Extract the message. */
+      $message = __(' Payment failed: Incomplete or missing configuration');
+      /* Log the error. */
+      $this->log->error(__FUNCTION__ . ':' . $message);
+      $this->messageManager->addErrorMessage(__('An error occurred in the process of payment') . ':' . $message);
+      $this->messageManager->addErrorMessage(__('The payment could not be processed. Please try again or contact the website administrator %1', $this->config->getContactEmail()));
       $this->_redirect('checkout/onepage/failure', ['_secure' => TRUE]);
     }
 
@@ -72,7 +77,8 @@ class BackUrl extends Action {
       $message = __(' NULL response received');
       /* Log the error. */
       $this->log->error(__FUNCTION__ . $message);
-      $this->messageManager->addErrorMessage(__FUNCTION__ . $message);
+      $this->messageManager->addErrorMessage(__('An error occurred in the process of payment') . ':' . $message);
+      $this->messageManager->addErrorMessage(__('The payment could not be processed. Please try again or contact the website administrator %1', $this->config->getContactEmail()));
       /* Redirect to fail page. */
       $this->_redirect('checkout/onepage/failure', ['_secure' => TRUE]);
     }
@@ -85,7 +91,8 @@ class BackUrl extends Action {
       $message = __(' Failed to decript the response');
       /* Log the error. */
       $this->log->error(__FUNCTION__ . $message);
-      $this->messageManager->addErrorMessage(__FUNCTION__ . $message);
+      $this->messageManager->addErrorMessage(__('An error occurred in the process of payment') . ':' . $message);
+      $this->messageManager->addErrorMessage(__('The payment could not be processed. Please try again or contact the website administrator %1', $this->config->getContactEmail()));
       /* Redirect to fail page. */
       $this->_redirect('checkout/onepage/failure', ['_secure' => TRUE]);
     }
@@ -98,7 +105,8 @@ class BackUrl extends Action {
       $message = __(' Failed to validate the response');
       /* Log the error. */
       $this->log->error(__FUNCTION__ . $message);
-      $this->messageManager->addErrorMessage(__FUNCTION__ . $message);
+      $this->messageManager->addErrorMessage(__('An error occurred in the process of payment') . ':' . $message);
+      $this->messageManager->addErrorMessage(__('The payment could not be processed. Please try again or contact the website administrator %1', $this->config->getContactEmail()));
       /* Redirect to fail page. */
       $this->_redirect('checkout/onepage/failure', ['_secure' => TRUE]);
     }
@@ -148,6 +156,7 @@ class BackUrl extends Action {
       $this->_redirect($successPage, ['_secure' => TRUE]);
     } else {
       $this->messageManager->addErrorMessage(__(' Failed to complete payment'));
+      $this->messageManager->addErrorMessage(__('The payment could not be processed. Please try again or contact the website administrator %1', $this->config->getContactEmail()));
       $this->_redirect('checkout/onepage/failure', ['_secure' => TRUE]);
     }
   }

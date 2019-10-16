@@ -48,15 +48,6 @@ class Config{
 
 
   /**
-   * Function that extracts the value "email_invoice" from
-   *  the config.
-   */
-  public function getEmailInvoice(){
-    return ($this->getConfigValue('email_invoice')) ? (TRUE) : (FALSE);
-  }
-
-
-  /**
    * Function that extracts the value "success_page" from
    *  the config.
    */
