@@ -118,9 +118,11 @@ class BackUrl extends Action {
       /* Extract the message. */
       $message = __(' Order doesn\'t exists in store');
       /* Log the error. */
-      $this->log->error($message);
-      $_response->setContents($message);
-      return $_response;
+      $this->log->error(__FUNCTION__ . $message);
+      $this->messageManager->addErrorMessage(__('An error occurred in the process of payment') . ':' . $message);
+      $this->messageManager->addErrorMessage(__('The payment could not be processed. Please try again or contact the website administrator %1', $this->config->getContactEmail()));
+      /* Redirect to fail page. */
+      $this->_redirect('checkout/onepage/failure', ['_secure' => TRUE]);
     }
 
     /* Update the status. */
