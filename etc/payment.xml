@@ -5,13 +5,13 @@
  *
  * @category    Twispay
  * @package     Twispay_Payments
- * @author      Webliant Software
+ * @author      Twispay
  */
 -->
 <payment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Payment:etc/payment.xsd">
-    <methods>
-        <method name="twispay">
-            <allow_multiple_address>1</allow_multiple_address>
-        </method>
-    </methods>
+  <methods>
+    <method name="twispay">
+      <allow_multiple_address>1</allow_multiple_address>
+    </method>
+  </methods>
 </payment>

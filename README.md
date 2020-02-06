@@ -1,11 +1,11 @@
 magento2-Twispay_Payments
-======================
+=========================
 
-The official Twispay Payment Gateway extension for Magento2.
+The official [Twispay Payment Gateway][twispay] extension for Magento 2.
 
 At the time of purchase, after checkout confirmation, the customer will be redirected to the secure Twispay Payment Gateway.
 
-All payments will be processed in a secure PCI DSS compliant environment so you don't have to think about any such compliance requirements in your web shop. 
+All payments will be processed in a secure PCI DSS compliant environment so you don't have to think about any such compliance requirements in your web shop.
 
 Install
 =======
@@ -17,7 +17,7 @@ find [The Official Twispay Payment Gateway Extension][marketplace].
 
 ### Manually
 
-1. Go to Magento2 root folder
+1. Go to Magento 2 root folder
 
 2. Enter following commands to install module:
 
@@ -35,12 +35,21 @@ find [The Official Twispay Payment Gateway Extension][marketplace].
     ```
 4. Enable and configure Twispay in Magento Admin under Stores/Configuration/Payment Methods/Twispay
 
+Changelog
+=========
+
+= 1.0.1 =
+* Updated the way requests are sent to the Twispay server.
+* Updated the server response handling to process all the possible server response statuses.
+* Added support for refunds and partial refunds.
+
+= 1.0.0 =
+* Initial Plugin version
+
 Other Notes
 ===========
 
 A functional description of the extension can be found on the [wiki page][doc]
-
-
 
 [twispay]: http://twispay.com/
 [marketplace]: https://marketplace.magento.com/twispay-magento2-payments.html
