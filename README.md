@@ -13,7 +13,7 @@ Install
 ### Magento Marketplace
 
 The recommended way of installing is through Magento Marketplace, where you can
-find [The Official Twispay Payment Gateway Extension][marketplace].
+find [The Official Twispay Payment Gateway Extension](https://marketplace.magento.com/twispay-module-payments.html).
 
 ### Manually
 
