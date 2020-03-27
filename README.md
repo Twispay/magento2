@@ -1,7 +1,7 @@
 magento2-Twispay_Payments
 =========================
 
-- Note:  In case you encounter any difficulties with integration, please contact us at support@twispay.com and we'll assist you through the process.
+***Note** :  In case you encounter any difficulties with integration, please contact us at support@twispay.com and we'll assist you through the process.*
 
 
 The official [Twispay Payment Gateway][twispay] extension for Magento 2.
