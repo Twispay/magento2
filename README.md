@@ -1,6 +1,9 @@
 magento2-Twispay_Payments
 =========================
 
+- Note:  In case you encounter any difficulties with integration, please contact us at support@twispay.com and we'll assist you through the process.
+
+
 The official [Twispay Payment Gateway][twispay] extension for Magento 2.
 
 At the time of purchase, after checkout confirmation, the customer will be redirected to the secure Twispay Payment Gateway.
@@ -46,10 +49,10 @@ Changelog
 = 1.0.0 =
 * Initial Plugin version
 
-Other Notes
+<!-- Other Notes
 ===========
 
-A functional description of the extension can be found on the [wiki page][doc]
+A functional description of the extension can be found on the [wiki page][doc]  -->
 
 [twispay]: http://twispay.com/
 [marketplace]: https://marketplace.magento.com/twispay-magento2-payments.html
