@@ -113,7 +113,7 @@ class Ipn extends Action {
     }
 
     /* Update the status. */
-    $statusUpdate = $this->helper->updateStatus_purchase_IPN($order, $decrypted['transactionId'], (empty($decrypted['status'])) ? ($decrypted['transactionStatus']) : ($decrypted['status']));
+    $statusUpdate = $this->helper->updateStatus_purchase_IPN($order, $decrypted['transactionId'], $decrypted['transactionStatus']);
 
     /* Check status update result. */
     if (TRUE == $statusUpdate) {

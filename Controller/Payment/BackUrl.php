@@ -126,7 +126,7 @@ class BackUrl extends Action {
     }
 
     /* Update the status. */
-    $statusUpdate = $this->helper->updateStatus_purchase_backUrl($order, $decrypted['transactionId'], (empty($decrypted['status'])) ? ($decrypted['transactionStatus']) : ($decrypted['status']));
+    $statusUpdate = $this->helper->updateStatus_purchase_backUrl($order, $decrypted['transactionId'], $decrypted['transactionStatus']);
 
     /* Check status update result. */
     if (TRUE == $statusUpdate) {

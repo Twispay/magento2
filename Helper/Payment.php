@@ -106,9 +106,9 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
 
   /**
    * Function that extracts an order.
-   * 
+   *
    * @param orderId: The ID of the order to extarct.
-   * 
+   *
    * @return Magento\Sales\Model\Order if found
    *         NULL if not found
    */
@@ -125,10 +125,10 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
 
   /**
    * Function that extracts an transaction.
-   * 
+   *
    * @param orderId: The ID of the order for which to extract the transaction.
    * @param txnId: The txnId of the transaction to be extracted.
-   * 
+   *
    * @return Magento\Sales\Model\Order\Payment\Transaction if found
    *         NULL if not found
    */
@@ -148,10 +148,10 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
 
   /**
    * Function that extracts a list of transactions for an order.
-   * 
+   *
    * @param orderId: The ID of the order for which to extarct
    *                  the transactions list.
-   * 
+   *
    * @return List of Magento\Sales\Model\Order\Payment\Transaction
    */
   public function getTransactions($orderId){
@@ -194,7 +194,7 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
    * @param isGuest - Flag indicating if the order comes from an authenticated customer or a guest.
    *
    * @return array([key => value,]) - Representing the JSON to be sent to the payment gateway.
-   *         bool(FALSE)            - Otherwise      
+   *         bool(FALSE)            - Otherwise
    */
   public function createPurchaseRequest($orderId, $isGuest) {
     /* Get the details of the last order. */
@@ -364,7 +364,7 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
       return FALSE;
     }
 
-    if(empty($response['status']) && empty($response['transactionStatus'])) {
+    if(empty($response['transactionStatus'])) {
       $errors[] = __(' [RESPONSE-ERROR]: Empty status');
     }
 
@@ -388,7 +388,7 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
       return FALSE;
     } else {
       $data = [ 'externalOrderId' => explode('_', $response['externalOrderId'])[0]
-              , 'status'          => (empty($response['status'])) ? ($response['transactionStatus']) : ($response['status'])
+              , 'status'          => $response['transactionStatus']
               , 'identifier'      => $response['identifier']
               , 'orderId'         => (int)$response['orderId']
               , 'transactionId'   => (int)$response['transactionId']
@@ -616,10 +616,10 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper {
 
   /**
    * Create Invoice Based on Order Object
-   * 
+   *
    * @param order: The order that has the transaction and the invoice.
    * @param transactionId: The ID of the transaction.
-   * 
+   *
    * @return bool
    */
   public function generateInvoice($order, $transactionId){
